@@ -16,7 +16,7 @@
 	市面上的工具貌似都支持这个功能.
 
 ## 源项目地址
-https://github.com/asiontang/93.Ye.M3U8.Downloader
+https://github.com/asiontang/93.Ye.M3U8.Downloader  
 https://gitee.com/AsionTang/93.Ye.M3U8.Downloader  
 
 ## TIPS
@@ -44,7 +44,7 @@ https://github.com/ziahamza/webui-aria2
 
 2. 支持输入本地m3u8文件的路径作为URL，支持拖曳文件到窗口。
 
-	本地m3u8文件中不包含绝对网址时（key标记包含URI时会自动获取），请手动添加一个URI标记（程序获取后会与相对地址拼接成对应的下载网址）：
+	本地m3u8文件中不包含绝对网址时（key标记包含URI时会自动获取），请手动添加一个URI标记（程序获取后会与相对地址拼接成对应的下载网址）：  
 	例：#URI:https://abc/d/e/
 
 3. 根据不同的下载场景，选择不同的Aria2c配置文件（启动Aria2c前），FFmpeg文件夹中如果有同名txt，自动加载到控制台。
