@@ -1,0 +1,17 @@
+﻿@ECHO OFF & TITLE 正在合并 - {文件名}
+PUSHD %~dp0
+
+SET FCMD="{ffmpeg}" -allowed_extensions ALL -protocol_whitelist "file,crypto,http,https,tcp,tls" -report -loglevel +level+error -i "{本地TS列表.m3u8}" -c copy -bsf:a aac_adtstoasc "..\{文件名}.mp4"
+ECHO FFmpeg命令：%FCMD%
+%FCMD%
+
+ECHO.
+ECHO FFmpeg退出码：ExitCode=%ERRORLEVEL%
+ECHO.
+
+IF %ERRORLEVEL% EQU 0 (
+CD ..
+RENAME "{文件名}" "OK.{文件名}"
+REM %SystemRoot%\Explorer.exe /e,/select,"{文件名}.mp4"
+) ELSE PAUSE
+EXIT

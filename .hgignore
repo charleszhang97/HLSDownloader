@@ -1,0 +1,13 @@
+syntax: glob
+.suo
+bin/Debug/*
+obj/Debug/*
+obj/*
+*.pdb
+*.vshost.*
+Aria2c/bin/
+HLS.Download/bin/
+XmlRpcNet/bin/
+ffmpeg.exe
+HLS.Download.UI/bin/Release/FFmpeg/7zS2con.sfx
+HLS.Download.UI/bin/Release/FFmpeg/Create7zSFX.bat
