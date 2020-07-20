@@ -15,32 +15,31 @@
 
 	市面上的工具貌似都支持这个功能.
 
-##项目地址
-https://github.com/asiontang/93.Ye.M3U8.Downloader/releases
-https://gitee.com/AsionTang/93.Ye.M3U8.Downloader/releases  
+## 源项目地址
+https://github.com/asiontang/93.Ye.M3U8.Downloader
+https://gitee.com/AsionTang/93.Ye.M3U8.Downloader  
 
-##TIPS
-###常用UserAgent查看地址：
+## TIPS
+### 常用UserAgent查看地址：
 https://developers.whatismybrowser.com/useragents/explore/operating_platform/iphone/
 http://www.useragentstring.com/pages/useragentstring.php
-###aria2最新版下载：
+### aria2最新版下载：
 https://github.com/aria2/aria2/releases/
-###ffmpeg最新版下载：
+### ffmpeg最新版下载：
 https://ffmpeg.zeranoe.com/builds/  
 
 ----------------------------------------------------------------------------------------------------
 
-
-##版本说明
+## 新版本说明
 	93.Ye.M3U8.Downloader v2.0，个人在原版基础上修改、优化。程序运行需要.NET Framework 4.6或更高版本。
 
-##项目地址：
-https://github.com/charleszhang97/93.Ye.M3U8.Downloader
+## 项目地址：
+https://github.com/charleszhang97/93.Ye.M3U8.Downloader  
 https://gitee.com/charles97/93.Ye.M3U8.Downloader
-##程序使用的WebUI项目地址：
+## 程序使用的WebUI项目地址：
 https://github.com/ziahamza/webui-aria2  
 
-##其他说明：
+## 其他说明：
 1. 如果合并控制台的命令参数需要修改，修改FFmpeg/cmd.txt即可，程序启动会自动加载。
 
 2. 支持输入本地m3u8文件的路径作为URL，支持拖曳文件到窗口。
