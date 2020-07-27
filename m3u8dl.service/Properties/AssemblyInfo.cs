@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("HLSDownloader [By:AsionTang] [Modify by Charles]")]
+[assembly: AssemblyTitle("URL Protocol服务程序，用于将参数解析后启动或传给主程序。")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Charles")]
-[assembly: AssemblyProduct("HLSDownloader")]
-[assembly: AssemblyCopyright("Copyright © AsionTang 2019,Copyright © CharlesZhang 2020")]
+[assembly: AssemblyProduct("m3u8dl.service")]
+[assembly: AssemblyCopyright("Copyright © CharlesZhang 2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // 如果此项目向 COM 公开，则下列 GUID 用于类型库的 ID
-[assembly: Guid("6b3b9a42-67e1-4dc9-b6a2-a50a3f184ea0")]
+[assembly: Guid("971c1e8f-0ab6-4711-8a70-83ef0c6e8c38")]
 
 // 程序集的版本信息由下列四个值组成: 
 //
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 //可以指定所有这些值，也可以使用“生成号”和“修订号”的默认值，
 // 方法是按如下所示使用“*”: :
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.0.5.2")]
-[assembly: AssemblyFileVersion("2.0.5.2")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]

@@ -115,7 +115,7 @@
             this.groupBox1.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox1.Size = new System.Drawing.Size(706, 258);
+            this.groupBox1.Size = new System.Drawing.Size(739, 258);
             this.groupBox1.TabIndex = 21;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "下载控制台:";
@@ -124,7 +124,7 @@
             // 
             this.ckbMergeTasks.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.ckbMergeTasks.AutoSize = true;
-            this.ckbMergeTasks.Location = new System.Drawing.Point(577, 108);
+            this.ckbMergeTasks.Location = new System.Drawing.Point(610, 108);
             this.ckbMergeTasks.Name = "ckbMergeTasks";
             this.ckbMergeTasks.Size = new System.Drawing.Size(119, 19);
             this.ckbMergeTasks.TabIndex = 42;
@@ -142,7 +142,7 @@
             this.panel2.Location = new System.Drawing.Point(5, 61);
             this.panel2.Margin = new System.Windows.Forms.Padding(4);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(695, 38);
+            this.panel2.Size = new System.Drawing.Size(728, 38);
             this.panel2.TabIndex = 28;
             // 
             // cbbUserAgent
@@ -165,7 +165,7 @@
             this.cbbUserAgent.Location = new System.Drawing.Point(89, 8);
             this.cbbUserAgent.Margin = new System.Windows.Forms.Padding(4);
             this.cbbUserAgent.Name = "cbbUserAgent";
-            this.cbbUserAgent.Size = new System.Drawing.Size(598, 23);
+            this.cbbUserAgent.Size = new System.Drawing.Size(631, 23);
             this.cbbUserAgent.TabIndex = 30;
             this.cbbUserAgent.Text = "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) C" +
     "hrome/81.0.4044.122 Safari/537.36";
@@ -208,7 +208,7 @@
             // 
             this.btnDoIt.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDoIt.Location = new System.Drawing.Point(644, 130);
+            this.btnDoIt.Location = new System.Drawing.Point(677, 130);
             this.btnDoIt.Margin = new System.Windows.Forms.Padding(4);
             this.btnDoIt.Name = "btnDoIt";
             this.btnDoIt.Size = new System.Drawing.Size(57, 113);
@@ -228,7 +228,7 @@
             this.txbUrls.Multiline = true;
             this.txbUrls.Name = "txbUrls";
             this.txbUrls.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txbUrls.Size = new System.Drawing.Size(629, 113);
+            this.txbUrls.Size = new System.Drawing.Size(662, 113);
             this.txbUrls.TabIndex = 33;
             this.toolTip1.SetToolTip(this.txbUrls, "示例1：VideoName|https://website.com/E1okxWlJ/index.m3u8\r\n示例2：VideoName|D:\\MyFolder\\" +
         "index.m3u8");
@@ -249,7 +249,7 @@
             this.panel1.Location = new System.Drawing.Point(5, 24);
             this.panel1.Margin = new System.Windows.Forms.Padding(4);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(695, 38);
+            this.panel1.Size = new System.Drawing.Size(728, 38);
             this.panel1.TabIndex = 22;
             // 
             // cbbAction
@@ -264,8 +264,10 @@
             "重新启动",
             "睡眠",
             "休眠",
-            "关闭显示器"});
-            this.cbbAction.Location = new System.Drawing.Point(581, 8);
+            "关闭显示器",
+            "关闭Aria2",
+            "退出程序"});
+            this.cbbAction.Location = new System.Drawing.Point(614, 8);
             this.cbbAction.Name = "cbbAction";
             this.cbbAction.Size = new System.Drawing.Size(105, 23);
             this.cbbAction.TabIndex = 44;
@@ -276,7 +278,7 @@
             // 
             this.label11.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(501, 11);
+            this.label11.Location = new System.Drawing.Point(534, 11);
             this.label11.Name = "label11";
             this.label11.Size = new System.Drawing.Size(82, 15);
             this.label11.TabIndex = 43;
@@ -363,7 +365,7 @@
             this.txbLog.Multiline = true;
             this.txbLog.Name = "txbLog";
             this.txbLog.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txbLog.Size = new System.Drawing.Size(528, 785);
+            this.txbLog.Size = new System.Drawing.Size(520, 785);
             this.txbLog.TabIndex = 40;
             // 
             // groupBox2
@@ -390,7 +392,7 @@
             this.groupBox2.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Padding = new System.Windows.Forms.Padding(6, 4, 4, 4);
-            this.groupBox2.Size = new System.Drawing.Size(706, 254);
+            this.groupBox2.Size = new System.Drawing.Size(739, 254);
             this.groupBox2.TabIndex = 2;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Aria2控制台:";
@@ -402,7 +404,7 @@
             this.pbDownProgress.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
             this.pbDownProgress.Location = new System.Drawing.Point(10, 206);
             this.pbDownProgress.Name = "pbDownProgress";
-            this.pbDownProgress.Size = new System.Drawing.Size(686, 2);
+            this.pbDownProgress.Size = new System.Drawing.Size(719, 2);
             this.pbDownProgress.Step = 1;
             this.pbDownProgress.TabIndex = 23;
             // 
@@ -414,7 +416,7 @@
             this.txbAria2Args.Location = new System.Drawing.Point(488, 27);
             this.txbAria2Args.Margin = new System.Windows.Forms.Padding(4);
             this.txbAria2Args.Name = "txbAria2Args";
-            this.txbAria2Args.Size = new System.Drawing.Size(208, 25);
+            this.txbAria2Args.Size = new System.Drawing.Size(241, 25);
             this.txbAria2Args.TabIndex = 18;
             this.toolTip1.SetToolTip(this.txbAria2Args, "对Aria2命令行追加必要参数（启动Aria2前输入）");
             this.txbAria2Args.WordWrap = false;
@@ -448,7 +450,7 @@
             this.txbTotalData.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txbTotalData.Cursor = System.Windows.Forms.Cursors.Default;
             this.txbTotalData.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.txbTotalData.Location = new System.Drawing.Point(396, 217);
+            this.txbTotalData.Location = new System.Drawing.Point(429, 217);
             this.txbTotalData.Margin = new System.Windows.Forms.Padding(4);
             this.txbTotalData.Name = "txbTotalData";
             this.txbTotalData.ReadOnly = true;
@@ -464,7 +466,7 @@
             this.txbTotalTime.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txbTotalTime.Cursor = System.Windows.Forms.Cursors.Default;
             this.txbTotalTime.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
-            this.txbTotalTime.Location = new System.Drawing.Point(601, 217);
+            this.txbTotalTime.Location = new System.Drawing.Point(634, 217);
             this.txbTotalTime.Margin = new System.Windows.Forms.Padding(4);
             this.txbTotalTime.Name = "txbTotalTime";
             this.txbTotalTime.ReadOnly = true;
@@ -490,7 +492,7 @@
             // 
             this.label10.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(290, 221);
+            this.label10.Location = new System.Drawing.Point(323, 221);
             this.label10.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(112, 15);
@@ -539,7 +541,7 @@
             // 
             this.label8.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(495, 222);
+            this.label8.Location = new System.Drawing.Point(528, 222);
             this.label8.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(112, 15);
@@ -580,7 +582,7 @@
             this.txbAria2GlobalInfo.Margin = new System.Windows.Forms.Padding(4);
             this.txbAria2GlobalInfo.Name = "txbAria2GlobalInfo";
             this.txbAria2GlobalInfo.ReadOnly = true;
-            this.txbAria2GlobalInfo.Size = new System.Drawing.Size(686, 24);
+            this.txbAria2GlobalInfo.Size = new System.Drawing.Size(719, 24);
             this.txbAria2GlobalInfo.TabIndex = 0;
             this.txbAria2GlobalInfo.TabStop = false;
             this.txbAria2GlobalInfo.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -603,7 +605,7 @@
             this.flowLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(3, 2, 2, 2);
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(702, 110);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(735, 110);
             this.flowLayoutPanel1.TabIndex = 5;
             // 
             // btnStartAria2
@@ -611,18 +613,18 @@
             this.btnStartAria2.Location = new System.Drawing.Point(7, 6);
             this.btnStartAria2.Margin = new System.Windows.Forms.Padding(4);
             this.btnStartAria2.Name = "btnStartAria2";
-            this.btnStartAria2.Size = new System.Drawing.Size(131, 45);
+            this.btnStartAria2.Size = new System.Drawing.Size(136, 45);
             this.btnStartAria2.TabIndex = 6;
-            this.btnStartAria2.Text = "启动";
+            this.btnStartAria2.Text = "启动Aria2";
             this.btnStartAria2.UseVisualStyleBackColor = true;
             this.btnStartAria2.Click += new System.EventHandler(this.btnStartAria2_Click);
             // 
             // btnOpenAria2WebUI
             // 
-            this.btnOpenAria2WebUI.Location = new System.Drawing.Point(146, 6);
+            this.btnOpenAria2WebUI.Location = new System.Drawing.Point(151, 6);
             this.btnOpenAria2WebUI.Margin = new System.Windows.Forms.Padding(4);
             this.btnOpenAria2WebUI.Name = "btnOpenAria2WebUI";
-            this.btnOpenAria2WebUI.Size = new System.Drawing.Size(131, 45);
+            this.btnOpenAria2WebUI.Size = new System.Drawing.Size(136, 45);
             this.btnOpenAria2WebUI.TabIndex = 7;
             this.btnOpenAria2WebUI.Text = "打开WebUI";
             this.btnOpenAria2WebUI.UseVisualStyleBackColor = true;
@@ -630,10 +632,10 @@
             // 
             // btnOpenDownloadDir
             // 
-            this.btnOpenDownloadDir.Location = new System.Drawing.Point(285, 6);
+            this.btnOpenDownloadDir.Location = new System.Drawing.Point(295, 6);
             this.btnOpenDownloadDir.Margin = new System.Windows.Forms.Padding(4);
             this.btnOpenDownloadDir.Name = "btnOpenDownloadDir";
-            this.btnOpenDownloadDir.Size = new System.Drawing.Size(131, 45);
+            this.btnOpenDownloadDir.Size = new System.Drawing.Size(136, 45);
             this.btnOpenDownloadDir.TabIndex = 8;
             this.btnOpenDownloadDir.Text = "打开下载目录";
             this.btnOpenDownloadDir.UseVisualStyleBackColor = true;
@@ -641,10 +643,10 @@
             // 
             // btnSetDownloadLocation
             // 
-            this.btnSetDownloadLocation.Location = new System.Drawing.Point(424, 6);
+            this.btnSetDownloadLocation.Location = new System.Drawing.Point(439, 6);
             this.btnSetDownloadLocation.Margin = new System.Windows.Forms.Padding(4);
             this.btnSetDownloadLocation.Name = "btnSetDownloadLocation";
-            this.btnSetDownloadLocation.Size = new System.Drawing.Size(131, 45);
+            this.btnSetDownloadLocation.Size = new System.Drawing.Size(136, 45);
             this.btnSetDownloadLocation.TabIndex = 9;
             this.btnSetDownloadLocation.Text = "设置下载目录";
             this.btnSetDownloadLocation.UseVisualStyleBackColor = true;
@@ -652,10 +654,10 @@
             // 
             // btnPauseAll
             // 
-            this.btnPauseAll.Location = new System.Drawing.Point(563, 6);
+            this.btnPauseAll.Location = new System.Drawing.Point(583, 6);
             this.btnPauseAll.Margin = new System.Windows.Forms.Padding(4);
             this.btnPauseAll.Name = "btnPauseAll";
-            this.btnPauseAll.Size = new System.Drawing.Size(131, 45);
+            this.btnPauseAll.Size = new System.Drawing.Size(136, 45);
             this.btnPauseAll.TabIndex = 10;
             this.btnPauseAll.Text = "全部暂停下载";
             this.btnPauseAll.UseVisualStyleBackColor = true;
@@ -666,7 +668,7 @@
             this.btnUnPauseAll.Location = new System.Drawing.Point(7, 59);
             this.btnUnPauseAll.Margin = new System.Windows.Forms.Padding(4);
             this.btnUnPauseAll.Name = "btnUnPauseAll";
-            this.btnUnPauseAll.Size = new System.Drawing.Size(131, 45);
+            this.btnUnPauseAll.Size = new System.Drawing.Size(136, 45);
             this.btnUnPauseAll.TabIndex = 11;
             this.btnUnPauseAll.Text = "全部开始下载";
             this.btnUnPauseAll.UseVisualStyleBackColor = true;
@@ -675,10 +677,10 @@
             // btnDelSession
             // 
             this.btnDelSession.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDelSession.Location = new System.Drawing.Point(146, 59);
+            this.btnDelSession.Location = new System.Drawing.Point(151, 59);
             this.btnDelSession.Margin = new System.Windows.Forms.Padding(4);
             this.btnDelSession.Name = "btnDelSession";
-            this.btnDelSession.Size = new System.Drawing.Size(131, 45);
+            this.btnDelSession.Size = new System.Drawing.Size(136, 45);
             this.btnDelSession.TabIndex = 12;
             this.btnDelSession.Text = "清空下载记录";
             this.toolTip1.SetToolTip(this.btnDelSession, "清除aria2c.session文件内容");
@@ -688,10 +690,10 @@
             // btnRmAllTasks
             // 
             this.btnRmAllTasks.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnRmAllTasks.Location = new System.Drawing.Point(285, 59);
+            this.btnRmAllTasks.Location = new System.Drawing.Point(295, 59);
             this.btnRmAllTasks.Margin = new System.Windows.Forms.Padding(4);
             this.btnRmAllTasks.Name = "btnRmAllTasks";
-            this.btnRmAllTasks.Size = new System.Drawing.Size(131, 45);
+            this.btnRmAllTasks.Size = new System.Drawing.Size(136, 45);
             this.btnRmAllTasks.TabIndex = 13;
             this.btnRmAllTasks.Text = "取消剩余下载";
             this.toolTip1.SetToolTip(this.btnRmAllTasks, "移除剩余所有的下载任务，结束下载");
@@ -701,10 +703,10 @@
             // btnKillAllAria2
             // 
             this.btnKillAllAria2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnKillAllAria2.Location = new System.Drawing.Point(424, 59);
+            this.btnKillAllAria2.Location = new System.Drawing.Point(439, 59);
             this.btnKillAllAria2.Margin = new System.Windows.Forms.Padding(4);
             this.btnKillAllAria2.Name = "btnKillAllAria2";
-            this.btnKillAllAria2.Size = new System.Drawing.Size(131, 45);
+            this.btnKillAllAria2.Size = new System.Drawing.Size(136, 45);
             this.btnKillAllAria2.TabIndex = 14;
             this.btnKillAllAria2.Text = "杀掉所有进程";
             this.toolTip1.SetToolTip(this.btnKillAllAria2, "关闭Aria2及其进程");
@@ -714,10 +716,10 @@
             // btnLastTaskDir
             // 
             this.btnLastTaskDir.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnLastTaskDir.Location = new System.Drawing.Point(563, 59);
+            this.btnLastTaskDir.Location = new System.Drawing.Point(583, 59);
             this.btnLastTaskDir.Margin = new System.Windows.Forms.Padding(4);
             this.btnLastTaskDir.Name = "btnLastTaskDir";
-            this.btnLastTaskDir.Size = new System.Drawing.Size(131, 45);
+            this.btnLastTaskDir.Size = new System.Drawing.Size(136, 45);
             this.btnLastTaskDir.TabIndex = 41;
             this.btnLastTaskDir.Text = "打开最后一次\r\n任务目录";
             this.toolTip1.SetToolTip(this.btnLastTaskDir, "打开最后一次任务的下载目录");
@@ -736,7 +738,7 @@
             this.groupBox3.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Padding = new System.Windows.Forms.Padding(4);
-            this.groupBox3.Size = new System.Drawing.Size(706, 280);
+            this.groupBox3.Size = new System.Drawing.Size(739, 280);
             this.groupBox3.TabIndex = 35;
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "合并控制台:";
@@ -748,7 +750,7 @@
             this.llblDeleteMergedFolders.Cursor = System.Windows.Forms.Cursors.Hand;
             this.llblDeleteMergedFolders.Font = new System.Drawing.Font("宋体", 9F, System.Drawing.FontStyle.Underline, System.Drawing.GraphicsUnit.Point, ((byte)(134)));
             this.llblDeleteMergedFolders.LinkColor = System.Drawing.SystemColors.ControlDarkDark;
-            this.llblDeleteMergedFolders.Location = new System.Drawing.Point(585, 22);
+            this.llblDeleteMergedFolders.Location = new System.Drawing.Point(618, 22);
             this.llblDeleteMergedFolders.Name = "llblDeleteMergedFolders";
             this.llblDeleteMergedFolders.Size = new System.Drawing.Size(112, 15);
             this.llblDeleteMergedFolders.TabIndex = 45;
@@ -762,7 +764,7 @@
             // 
             this.btnMerge.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMerge.Location = new System.Drawing.Point(644, 120);
+            this.btnMerge.Location = new System.Drawing.Point(677, 120);
             this.btnMerge.Margin = new System.Windows.Forms.Padding(4);
             this.btnMerge.Name = "btnMerge";
             this.btnMerge.Size = new System.Drawing.Size(57, 148);
@@ -794,7 +796,7 @@
             this.txbMergeCMD.Multiline = true;
             this.txbMergeCMD.Name = "txbMergeCMD";
             this.txbMergeCMD.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txbMergeCMD.Size = new System.Drawing.Size(629, 148);
+            this.txbMergeCMD.Size = new System.Drawing.Size(662, 148);
             this.txbMergeCMD.TabIndex = 37;
             this.txbMergeCMD.Text = resources.GetString("txbMergeCMD.Text");
             this.txbMergeCMD.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.txbMergeCMD_MouseDoubleClick);
@@ -807,7 +809,7 @@
             this.groupBox4.Margin = new System.Windows.Forms.Padding(4);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Padding = new System.Windows.Forms.Padding(2);
-            this.groupBox4.Size = new System.Drawing.Size(538, 808);
+            this.groupBox4.Size = new System.Drawing.Size(530, 808);
             this.groupBox4.TabIndex = 39;
             this.groupBox4.TabStop = false;
             this.groupBox4.Text = "日志信息:";
@@ -833,8 +835,8 @@
             this.splitContainer1.Panel2.Controls.Add(this.groupBox4);
             this.splitContainer1.Panel2.Padding = new System.Windows.Forms.Padding(20, 16, 14, 14);
             this.splitContainer1.Panel2MinSize = 300;
-            this.splitContainer1.Size = new System.Drawing.Size(1323, 840);
-            this.splitContainer1.SplitterDistance = 746;
+            this.splitContainer1.Size = new System.Drawing.Size(1348, 840);
+            this.splitContainer1.SplitterDistance = 779;
             this.splitContainer1.SplitterIncrement = 30;
             this.splitContainer1.SplitterWidth = 3;
             this.splitContainer1.TabIndex = 0;
@@ -850,13 +852,12 @@
             // MainForm
             // 
             this.AllowDrop = true;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1323, 840);
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Inherit;
+            this.ClientSize = new System.Drawing.Size(1348, 840);
             this.Controls.Add(this.splitContainer1);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4);
+            this.MinimumSize = new System.Drawing.Size(1130, 768);
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "HLS视频流下载器";

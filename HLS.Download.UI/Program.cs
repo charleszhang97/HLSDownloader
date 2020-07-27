@@ -8,27 +8,39 @@ namespace HLS.Download.UI
     static class Program
     {
         private static Mutex mutex;
+        private static MainForm mainWindow;
         /// <summary>
         /// 应用程序的主入口点。
         /// </summary>
         [STAThread]
-        public static void Main()
+        public static void Main(string[] args)
         {
-            bool isNewInstanceCreated;
-            mutex = new Mutex(true, Application.ProductName, out isNewInstanceCreated);
-            if (isNewInstanceCreated)
-            {                
-                WindowsIdentity identity = WindowsIdentity.GetCurrent();//获得当前登录的Windows用户标识
-                WindowsPrincipal principal = new WindowsPrincipal(identity);                
-                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))//判断当前登录用户是否为管理员
+            bool isNewInstanceCreate;
+            mutex = new Mutex(true, Application.ProductName, out isNewInstanceCreate);
+            if (isNewInstanceCreate)
+            {
+                if (args.Length == 0)//仅在手动开启非调用时提示“以管理员运行”
                 {
-                    MessageBox.Show("当前用户不是管理员！（建议设置以管理员身份运行程序）\r\n部分功能可能会出现异常。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    WindowsIdentity identity = WindowsIdentity.GetCurrent();//获得当前登录的Windows用户标识
+                    WindowsPrincipal principal = new WindowsPrincipal(identity);
+                    if (!principal.IsInRole(WindowsBuiltInRole.Administrator))//判断当前登录用户是否为管理员
+                    {
+                        MessageBox.Show("当前用户不是管理员！（建议设置以管理员身份运行程序）\r\n部分功能可能会出现异常。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
                 }
+                
+                if (mainWindow == null)
+                {
+                    GC.KeepAlive(mutex);
 
-                GC.KeepAlive(mutex);
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.Run(new MainForm());                
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    if (args.Length == 0)
+                        mainWindow = new MainForm();
+                    else
+                        mainWindow = new MainForm(args);
+                    Application.Run(mainWindow);                    
+                }                               
             }
             else
             {
@@ -39,7 +51,9 @@ namespace HLS.Download.UI
 
         public static void CloseSingletonInstanceMutex()
         {
-            mutex?.Close();
+            mutex?.Dispose();
+            mutex = null;
+            mainWindow = null;
         }
     }
 }

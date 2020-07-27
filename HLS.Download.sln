@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HLS.Download.UI", "HLS.Download.UI\HLS.Download.UI.csproj", "{6B3B9A42-67E1-4DC9-B6A2-A50A3F184EA0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38} = {971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Aria2c", "Aria2c\Aria2c.csproj", "{E352E426-A614-4E27-A8EE-CD80FA184FF2}"
 EndProject
@@ -19,6 +22,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BrowserHelper", "BrowserHelper\BrowserHelper.csproj", "{767C182D-D7F9-48ED-B1F9-5DD896717965}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinAPI", "WinAPI\WinAPI.csproj", "{E9655732-EA47-4CDE-9EED-B16295379B16}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "M3U8DL.Service", "m3u8dl.service\M3U8DL.Service.csproj", "{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -80,8 +85,8 @@ Global
 		{D34E9CDC-0160-4357-8096-287F94E1B2AC}.Release|x86.Build.0 = Release|x86
 		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Debug|x64.Build.0 = Debug|Any CPU
+		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Debug|x64.ActiveCfg = Debug|x64
+		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Debug|x64.Build.0 = Debug|x64
 		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Debug|x86.ActiveCfg = Debug|x86
 		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Debug|x86.Build.0 = Debug|x86
 		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -92,16 +97,28 @@ Global
 		{767C182D-D7F9-48ED-B1F9-5DD896717965}.Release|x86.Build.0 = Release|x86
 		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|x64.Build.0 = Debug|Any CPU
-		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|x86.Build.0 = Debug|Any CPU
+		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|x64.ActiveCfg = Debug|x64
+		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|x64.Build.0 = Debug|x64
+		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|x86.ActiveCfg = Debug|x86
+		{E9655732-EA47-4CDE-9EED-B16295379B16}.Debug|x86.Build.0 = Debug|x86
 		{E9655732-EA47-4CDE-9EED-B16295379B16}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9655732-EA47-4CDE-9EED-B16295379B16}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E9655732-EA47-4CDE-9EED-B16295379B16}.Release|x64.ActiveCfg = Release|x64
 		{E9655732-EA47-4CDE-9EED-B16295379B16}.Release|x64.Build.0 = Release|x64
 		{E9655732-EA47-4CDE-9EED-B16295379B16}.Release|x86.ActiveCfg = Release|x86
 		{E9655732-EA47-4CDE-9EED-B16295379B16}.Release|x86.Build.0 = Release|x86
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Debug|x64.ActiveCfg = Debug|x64
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Debug|x64.Build.0 = Debug|x64
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Debug|x86.ActiveCfg = Debug|x86
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Debug|x86.Build.0 = Debug|x86
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Release|x64.ActiveCfg = Release|x64
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Release|x64.Build.0 = Release|x64
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Release|x86.ActiveCfg = Release|x86
+		{971C1E8F-0AB6-4711-8A70-83EF0C6E8C38}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

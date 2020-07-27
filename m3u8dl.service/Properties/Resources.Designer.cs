@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace HLS.Download.UI.Properties {
+namespace m3u8dl.service.Properties {
     using System;
     
     
@@ -39,7 +39,7 @@ namespace HLS.Download.UI.Properties {
         internal static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
-                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("HLS.Download.UI.Properties.Resources", typeof(Resources).Assembly);
+                    global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("m3u8dl.service.Properties.Resources", typeof(Resources).Assembly);
                     resourceMan = temp;
                 }
                 return resourceMan;
@@ -67,45 +67,6 @@ namespace HLS.Download.UI.Properties {
             get {
                 object obj = ResourceManager.GetObject("App48X48", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
-        /// </summary>
-        internal static System.Drawing.Bitmap Arrow {
-            get {
-                object obj = ResourceManager.GetObject("Arrow", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
-        /// </summary>
-        internal static System.Drawing.Bitmap circulate {
-            get {
-                object obj = ResourceManager.GetObject("circulate", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   查找类似于 System.IO.MemoryStream 的 System.IO.UnmanagedMemoryStream 类型的本地化资源。
-        /// </summary>
-        internal static System.IO.UnmanagedMemoryStream download_complete {
-            get {
-                return ResourceManager.GetStream("download_complete", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找 System.Byte[] 类型的本地化资源。
-        /// </summary>
-        internal static byte[] webui_aria2 {
-            get {
-                object obj = ResourceManager.GetObject("webui_aria2", resourceCulture);
-                return ((byte[])(obj));
             }
         }
     }

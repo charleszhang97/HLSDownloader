@@ -14,7 +14,8 @@ using FlyVR.Aria2;
 using HLS.Download.Models;
 using WinAPI;
 using BrowserHelper;
-//using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 
 namespace HLS.Download.UI
 {
@@ -40,6 +41,11 @@ namespace HLS.Download.UI
     //？可以使用COPY /B *.ts name.mp4 来解决无法通过 ffmpeg 合并的视频文件。如提示 Timestamps are unset in a packet for stream 0
     public partial class MainForm : Form
     {
+        private string[] parameters;
+        private const int USER = 0x0400;//用户自定义消息的开始数值
+        private const int WM_POST_ARGS = USER + 1;//自定义POST传送参数消息ID
+        private const int WM_SEND_ARGS = USER + 2;//自定义SEND传送参数消息ID
+        private const int WM_COPYDATA = 0x004A;//copydata消息ID
         private Aria2c mAria2c;
         private decimal? mSelectedBandwidth = null;
         private string mSelectedUserAgent;
@@ -68,9 +74,359 @@ namespace HLS.Download.UI
             InitializeComponent();
             Control.CheckForIllegalCrossThreadCalls = false;
 
-            txbAria2GlobalInfo.GotFocus += new EventHandler(txbReadOnly_GotFocus);
-            txbTotalData.GotFocus += new EventHandler(txbReadOnly_GotFocus);
-            txbTotalTime.GotFocus += new EventHandler(txbReadOnly_GotFocus);
+            if (HighDpiCheck())//Windows系统原始缩放以及高DPI情况下界面处理
+            {
+                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                {
+                    if (g.DpiX == 96f) //缩放百分比为100%时（程序代码在125%环境开发）
+                    {
+                        this.Font = new Font(Font.Name, this.Font.Size * 1.25f, Font.Style, Font.Unit, Font.GdiCharSet, Font.GdiVerticalFont);
+                    }
+                    else if (g.DpiX != 120f) //高分屏、高DPI（150% 200%） 缩放125%像素120
+                    {
+                        this.Font = new Font(Font.Name, this.Font.Size * g.DpiX / 120f, Font.Style, Font.Unit, Font.GdiCharSet, Font.GdiVerticalFont);
+                    }
+                }
+            }
+
+        }
+
+        /// <summary>
+        /// 读取配置判断是否检查DPI，便于手动设定跳过
+        /// </summary>
+        /// <returns></returns>
+        private bool HighDpiCheck()
+        {
+            bool isCheck = true;
+            var iniPath = Path.Combine(Environment.CurrentDirectory, "settings.ini");
+            if (File.Exists(iniPath))
+            {
+                bool.TryParse(INIHelper.Read("General", "HighDpiCheck", "", iniPath), out isCheck);
+            }
+            return isCheck;
+        }
+
+        public MainForm(string[] args) : this()
+        {
+            this.SetArgs(args);
+        }
+
+        public void SetArgs(string[] args)
+        {
+            //this.parameters = args;
+            if (args.Length == 1 && args[0].IndexOf("://") > -1)//Url协议对程序进行参数调用
+            {
+                if (args[0].IndexOf('%') > -1) //Chrome会将|等分割符号编码，这里判断有编码的进行解码
+                    args[0] = Uri.UnescapeDataString(args[0]);
+
+                /*为了更高的通用性，修改以‘://’来截取
+                if (args[0].ToLower().StartsWith("m3u8dl://"))
+                    //args[0] = args[0].Replace("m3u8dl://", "");
+                    args[0] = args[0].Substring("m3u8dl://".Length);
+                */
+                args[0] = args[0].Substring(args[0].IndexOf("://") + 3);
+
+                //移除浏览器等调用URL Protocol时自动在末尾添加的/（不是所有浏览器都添加），因为base64编码本身也包含/，为避免误伤正确数据，
+                //只能根据长度是否为4的倍数判断是否多出 /
+                if (args[0].EndsWith("/"))
+                {
+                    var lastSepartor = args[0].LastIndexOf('|');
+                    var lastPart = "";
+                    if (lastSepartor > -1)
+                        lastPart = args[0].Substring(lastSepartor + 1);
+                    else
+                        lastPart = args[0];
+
+                    var lastEquIndex = lastPart.IndexOf('=');
+                    if (lastEquIndex > -1) //找不到=的之后参数处理会直接忽略
+                    {
+                        var value = lastPart.Substring(lastEquIndex + 1);
+                        if (value.Length % 4 == 1 || value == "/") //除4后余1，多出个/，或者就等于/（要么空要么4位及其倍数）
+                            args[0] = args[0].Substring(0, args[0].Length - 1);
+                    }
+                }
+
+                //if (args[0].IndexOf('|') > -1)
+                string[] paras = args[0].Split(new char[] { '|' }, StringSplitOptions.RemoveEmptyEntries);
+
+                this.parameters = new string[paras.Length + 1];
+                this.parameters[0] = "decode=true";//标记参数值需要解码
+                paras.CopyTo(this.parameters, 1);
+            }
+            else
+            {
+                this.parameters = args;
+            }
+        }
+
+        public void EnabledParameters()
+        {
+            if (parameters != null && parameters.Length != 0)
+            {
+                var TAG = "启用传入参数";
+                WriteLog(null, Environment.NewLine);
+                WriteLog(TAG, "执行中...");
+                bool isAria2cNotRunning = mAria2c == null;
+                bool isStartAria2c = false;
+                bool isApplyMaxSpeed = false;
+                bool isStartDownTask = false;
+                try
+                {
+                    bool isNeedDecode = false;
+                    foreach (var str in parameters)
+                    {
+                        if (str.StartsWith("decode"))
+                        {
+                            //isNeedDecode = true;
+                            isNeedDecode = str == "decode=true";//str == "decode=false"时，isNeedDecode = false
+                            continue;
+                        }
+                        var equIndex = str.IndexOf('=');
+                        if (equIndex > -1)
+                        {
+                            var _key = str.Substring(0, equIndex);
+                            if (equIndex == str.Length - 1)
+                            {
+                                WriteLog(TAG, string.Format("未指定参数“{0}”的值！", _key));
+                                continue;
+                            }
+                            var _value = str.Substring(equIndex + 1);
+                            if (isNeedDecode && _key != "name-url-string")
+                            {
+                                _value = DecodeBase64(_value);
+                            }
+                            switch (_key)
+                            {
+                                case "config-name":
+                                    WriteLog(TAG, string.Format("参数名：{0}，参数值：{1}", _key, _value));
+                                    if (isAria2cNotRunning)
+                                    {
+                                        if (cbbConfigFileName.Items.Contains(_value))
+                                        {
+                                            cbbConfigFileName.Text = _value;
+                                            isStartAria2c = true;
+                                        }
+                                        else
+                                            WriteLog(TAG, string.Format("Aria2配置文件“{0}”没有找到，将忽略该参数", _value));
+                                    }
+                                    else
+                                        WriteLog(TAG, string.Format("Aria2已经启动过，将忽略该参数“{0}”（重启Aria2影响之前任务，故忽略）", _key));
+                                    break;
+                                case "aria2c-args-append":
+                                    WriteLog(TAG, string.Format("参数名：{0}，参数值：{1}", _key, _value));
+                                    if (isAria2cNotRunning)
+                                    {
+                                        txbAria2Args.Text = _value;
+                                        isStartAria2c = true;
+                                    }
+                                    else
+                                    {
+                                        //WriteLog(TAG, string.Format("Aria2已经启动过，将忽略该参数“{0}”", _key));
+                                        WriteLog(TAG, string.Format("Aria2已经启动过，将尝试拆分参数值“{0}”，依次应用到全局设置", _value));
+                                        WriteLog(TAG, "【注意】可能造成之前未完成的任务下载失败。");
+
+                                        string pattern = "--(?<OptionKey>[\\w-]+)=(?<OptionValue>[^ ]+)|(?<OptionValue>['\"][^'\"]+['\"])";
+                                        foreach (Match match in Regex.Matches(_value, pattern, RegexOptions.Compiled | RegexOptions.IgnoreCase))
+                                        {
+                                            try {
+                                                Aria2cOption option = new Aria2cOption();
+                                                var optionValue = match.Groups["OptionValue"].Value.Trim("'\"".ToCharArray());
+                                                option.SetOption(match.Groups["OptionKey"].Value, optionValue);
+                                                bool isSuccess = mAria2c.ChangeGlobalOption(option);
+                                                WriteLog(TAG, string.Format("Aria2参数“{0}”应用到全局{1}；", match.Groups["OptionKey"].Value, 
+                                                    isSuccess ? "成功":"失败"));
+                                            }
+                                            catch { WriteLog(TAG, string.Format("Aria2参数“{0}”应用到全局失败；", match.Groups["OptionKey"].Value)); }
+                                        }
+                                    }
+                                    break;
+                                case "max-speed-limit":
+                                    WriteLog(TAG, string.Format("参数名：{0}，参数值：{1}", _key, _value));
+                                    int iDownSpeedLimit;
+                                    if (int.TryParse(_value, out iDownSpeedLimit))
+                                    {
+                                        txbMaxDownloadSpeed.Text = _value;
+                                        isApplyMaxSpeed = true;
+                                    }
+                                    else
+                                        WriteLog(TAG, string.Format("参数值“{0}”不正确！", _value));
+                                    break;
+                                case "name-url-string":
+                                    WriteLog(TAG, string.Format("参数名：{0}，参数值：{1}", _key, _value));
+                                    var NameAndUrls = _value.Split(new char[] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+                                    Dictionary<string, string> mNameAndUrlMap = new Dictionary<string, string>();
+                                    foreach (var _str in NameAndUrls)
+                                    {
+                                        var name_url = _str.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries);
+                                        if (name_url.Length >= 2)
+                                        {
+                                            var _url = _str.Substring(_str.IndexOf(':') + 1);//未加密时，url中可能存在：，所以截取剩余字符串
+                                            if (isNeedDecode)
+                                                //mNameAndUrlMap.Add(DecodeBase64(name_url[0]), DecodeBase64(name_url[1]));
+                                                mNameAndUrlMap.Add(DecodeBase64(name_url[0]), DecodeBase64(_url));
+                                            else
+                                                //mNameAndUrlMap.Add(name_url[0], name_url[1]);
+                                                mNameAndUrlMap.Add(name_url[0], _url);
+                                        }
+                                        else
+                                            WriteLog(TAG, string.Format("参数值“{0}”格式不正确！已忽略", _str));
+                                    }
+                                    if (mNameAndUrlMap.Count > 0)
+                                    {
+                                        var tmpStr = ""; int _index = 0;
+                                        foreach (var _task in mNameAndUrlMap)
+                                        {
+                                            _index++;
+                                            tmpStr += _task.Key + "|" + _task.Value + Environment.NewLine;
+                                            WriteLog(TAG, string.Format(_index + "、文件名：{0}，下载地址：{1}；", _task.Key, _task.Value));
+                                        }
+                                        txbUrls.Text = tmpStr;
+                                        isStartDownTask = true;
+                                    }
+                                    break;
+                                case "action-after-downloaded":
+                                    WriteLog(TAG, string.Format("参数名：{0}，参数值：{1}", _key, _value));
+                                    if (cbbAction.Items.Contains(_value))
+                                    {
+                                        cbbAction.Text = _value;
+                                    }
+                                    else
+                                        WriteLog(TAG, string.Format("参数值“{0}”不正确！", _value));
+                                    break;
+                                case "":
+                                    WriteLog(TAG, "参数名为空！");
+                                    break;
+                                default:
+                                    WriteLog(TAG, "不支持的参数名：" + _key);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            WriteLog(TAG, string.Format("不正确的参数“{0}”！", str));
+                            continue;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteLog(TAG, "出现异常");
+                    WriteLog(TAG, ex.Message);
+                }
+                finally { WriteLog(TAG, "执行结束"); }
+                //参数的应用需要有先后顺序，不然可能出现无效的情况，故上面只赋值，以下按序执行
+                if (isStartAria2c)
+                    btnStartAria2_Click(btnStartAria2, null);
+                if (isApplyMaxSpeed)
+                    btnApplyMaxSpeed_Click(btnApplyMaxSpeed, null);
+                if (isStartDownTask)
+                {
+                    btnDoIt_Click(btnDoIt, null);
+                }
+            }
+        }
+
+        private string EncodeBase64(string str)
+        {
+            return BrowserHelper.Base64.EncodeBase64("utf-8", str);
+        }
+
+        private string DecodeBase64(string str)
+        {
+            return BrowserHelper.Base64.DecodeBase64("utf-8", str);
+        }
+
+        protected override void DefWndProc(ref Message m)
+        {
+            switch (m.Msg)
+            {
+                case WM_COPYDATA:
+                    //COPYDATASTRUCT cds = new COPYDATASTRUCT();
+                    //Type t = cds.GetType();
+                    //cds = (COPYDATASTRUCT)m.GetLParam(t);
+                    COPYDATASTRUCT cds = (COPYDATASTRUCT)m.GetLParam(typeof(COPYDATASTRUCT));
+                    string receiveData = cds.lpData;
+
+                    WriteLog(null, Environment.NewLine);
+                    WriteLog("接收到参数", receiveData);
+                    //WriteLog("参数长度", Encoding.Unicode.GetByteCount(receiveData).ToString());
+                    WriteLog("参数长度", receiveData.Length.ToString());
+                    WriteLog("来源窗口句柄", cds.dwData.ToInt32().ToString());
+
+                    //设定参数，启用参数
+                    //this.SetArgs(receiveData.Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
+                    //使用空格切分参数存在意外情况，可能将参数截断，改成以|分割
+                    this.SetArgs(receiveData.Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries));
+                    this.EnabledParameters();
+                    break;
+                case WM_SEND_ARGS:
+                    try
+                    {
+                        #region 以下代码无效，保留作为参考
+                        /* 进程间使用无效，本进程会直接卡死
+                        int length = m.LParam.ToInt32();
+                        //string args = Marshal.PtrToStringUni(m.WParam, length);
+                        STRSTRUCT ss = (STRSTRUCT)Marshal.PtrToStructure(m.WParam, typeof(STRSTRUCT));
+                        string args = ss.str;
+                        //string args = Marshal.PtrToStringUni(m.WParam);
+                        //string args = Marshal.PtrToStructure(m.WParam, typeof(string)) as string; //没有为该对象定义无参数的构造函数。
+                        Marshal.FreeHGlobal(m.WParam);
+                        WriteLog("接收参数", args);
+                        */
+
+                        /* 进程间使用无效，本进程会直接卡死
+                        STRSTRUCT ss = (STRSTRUCT)m.GetLParam(typeof(STRSTRUCT));
+                        string args = ss.str;
+                        WriteLog("接收参数", args);
+                        WriteLog("参数长度", Encoding.Default.GetByteCount(args).ToString());
+                        */
+                        #endregion
+                        WriteLog("接收参数hwnd", this.Handle.ToInt32().ToString());
+                        WriteLog("接收参数WMsg", m.Msg.ToString());
+                        WriteLog("接收参数WParam", m.WParam.ToInt32().ToString());
+                        WriteLog("接收参数LParam", m.LParam.ToInt32().ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog("接收参数", "出现异常：" + ex.Message);
+                    }
+                    break;
+                case WM_POST_ARGS:
+                    try
+                    {
+                        #region 以下代码无效，保留作为参考
+                        /* 进程间使用无效，本进程会直接卡死
+                        int length = m.LParam.ToInt32();
+                        string args = Marshal.PtrToStringAnsi(m.WParam, length);
+                        //string args = Marshal.PtrToStringAnsi(m.WParam);
+                        //string args = Marshal.PtrToStructure(m.WParam, typeof(string)) as string; //没有为该对象定义无参数的构造函数。
+                        Marshal.FreeHGlobal(m.WParam);
+                        WriteLog("接收参数", args);
+                        */
+                        /*
+                        int length = m.LParam.ToInt32();
+                        IntPtr pData = m.WParam;
+                        byte[] byData = new byte[length];
+                        Marshal.Copy(pData, byData, 0, length);
+                        string strData = Encoding.Default.GetString(byData);
+                        WriteLog("接收参数", strData);
+                        Marshal.FreeHGlobal(m.WParam);
+                        */
+                        #endregion
+                        WriteLog("接收参数hwnd", this.Handle.ToInt32().ToString());
+                        WriteLog("接收参数WMsg", m.Msg.ToString());
+                        WriteLog("接收参数WParam", m.WParam.ToInt32().ToString());
+                        WriteLog("接收参数LParam", m.LParam.ToInt32().ToString());
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteLog("接收参数", "出现异常：" + ex.Message);
+                    }
+                    break;
+                default:
+                    base.DefWndProc(ref m);//调用基类函数，以便系统处理其它消息
+                    break;
+            }
         }
 
         private string[] getDownloadUrls()
@@ -180,9 +536,9 @@ namespace HLS.Download.UI
                     //name = reg.Replace(name, " ");
                     foreach (var chr in Path.GetInvalidFileNameChars())
                     {
-                        if(name.IndexOf(chr)>-1)
+                        if (name.IndexOf(chr) > -1)
                             name = name.Replace(chr, ' ');
-                    }                    
+                    }
 
                     var dir = Path.Combine(downloadDir, name);//使用文件名作为新目录来临时存储多个切片。
                     Directory.CreateDirectory(dir);
@@ -426,6 +782,10 @@ namespace HLS.Download.UI
                     txbTotalTime.Cursor = txbAria2Args.Cursor = this.Cursor;
             }
 
+            txbAria2GlobalInfo.GotFocus += new EventHandler(txbReadOnly_GotFocus);
+            txbTotalData.GotFocus += new EventHandler(txbReadOnly_GotFocus);
+            txbTotalTime.GotFocus += new EventHandler(txbReadOnly_GotFocus);
+
             InitializeNotifyicon();//初始化托盘
 
             //不再在启动时检测状态，发现即使检测到已经启动，但是后续的别的模块还是依赖于点击界面的启动按钮才有效。
@@ -434,6 +794,9 @@ namespace HLS.Download.UI
             //NO:WriteLog(TAG, "检测到 Aria2 状态为" + (!btnStartAria2.Enabled ? "【已启动】" : "[未启动]"));            
 
             WriteLog(TAG, "启动完毕。");
+
+            //启用传入的参数（调用非手动开启）
+            EnabledParameters();
         }
 
         /// <summary> 自定义光标获取</summary>
@@ -492,7 +855,7 @@ namespace HLS.Download.UI
         private void ToggleMaxDownloadSpeed(object sender, EventArgs e)
         {
             MenuItem item = (MenuItem)sender;
-            if (item.Text.IndexOf('√')==-1)//未启用
+            if (item.Text.IndexOf('√') == -1)//未启用
             {
                 btnApplyMaxSpeed_Click(sender, e);
 
@@ -751,11 +1114,11 @@ namespace HLS.Download.UI
                     mCurrentDownLoadDir = downloadPath;
                     WriteLog(TAG, "设置全局下载目录=" + downloadPath);
 
-                    await Task.Delay(3000);//等待3秒后，开始恢复会话任务
+                    //await Task.Delay(3000);//等待3秒后，开始恢复会话任务  修改：取消等待
                     int iRestoreTasksCount = mAria2c.RestoreSession();
                     if (iRestoreTasksCount != 0)
                     {
-                        WriteLog(TAG, string.Format("恢复会话任务完毕：共恢复{0}个下载任务。", iRestoreTasksCount));
+                        WriteLog(TAG, string.Format("恢复会话任务完毕：共恢复{0}个下载任务。点击“全部开始下载”继续之前的下载", iRestoreTasksCount));
                         InitTimer();
                         mAllDownLoadComplete = false;
                         mAllPause = true;
@@ -927,8 +1290,9 @@ namespace HLS.Download.UI
             {
                 if (cbbAction.Text == "无操作" || cbbAction.Text.Trim() == "")
                     return;
-                if (mAria2c != null)
-                    btnKillAllAria2_Click(this, e);
+                //注释掉，依不同情况决定是否Kill Aria2
+                //if (mAria2c != null)
+                //    btnKillAllAria2_Click(this, e);
 
                 WriteLog(null, Environment.NewLine);
                 WriteLog(TAG, string.Format("10秒后执行：【{0}】", cbbAction.Text));
@@ -938,15 +1302,18 @@ namespace HLS.Download.UI
                 switch (cbbAction.Text)
                 {
                     case "注销":
+                        CloseAria2ByNonUiThread(e);
                         ForSystem.Logoff();
                         break;
                     case "锁定":
                         ForSystem.Lock();
                         break;
                     case "关机":
+                        CloseAria2ByNonUiThread(e);
                         ForSystem.Shutdown();
                         break;
                     case "重新启动":
+                        CloseAria2ByNonUiThread(e);
                         ForSystem.Reboot();
                         break;
                     case "睡眠":
@@ -957,6 +1324,23 @@ namespace HLS.Download.UI
                         break;
                     case "关闭显示器":
                         ForSystem.TurnOffMonitor(this.Handle);
+                        break;
+                    case "关闭Aria2":
+                        CloseAria2ByNonUiThread(e);
+                        break;
+                    case "退出程序":
+                        CloseAria2ByNonUiThread(e);
+                        //直接调用Exit方法会在退出时崩溃。这里设定FormClosingEventArgs避免弹出提示框（非UserClosing即可）
+                        //Exit(this, new FormClosingEventArgs(CloseReason.None,false));
+                        //mAria2c的事件响应，非UI主线程，跨线程（ObjectDisposedException）,调用Invoke方法解决
+                        if (this.InvokeRequired)
+                        {
+                            if (!this.IsHandleCreated && (this.Disposing || this.IsDisposed))//窗体已经在关闭时直接返回
+                                return;
+                            this.Invoke(new MethodInvoker(() => {
+                                this.MainForm_FormClosing(this, new FormClosingEventArgs(CloseReason.ApplicationExitCall, false));
+                            }));
+                        }
                         break;
                     default:
                         break;
@@ -969,7 +1353,25 @@ namespace HLS.Download.UI
             }
         }
 
-        private void OnDownloadError(Aria2cTaskEvent taskEvent,object obj)
+        private void CloseAria2ByNonUiThread(EventArgs e)
+        {
+            if (mAria2c == null) //mAria2c为null不需要kill
+                return;
+            if (btnKillAllAria2.InvokeRequired)
+            {
+                //解决窗体关闭时出现“访问已释放句柄“的异常 
+                if (!btnKillAllAria2.IsHandleCreated && (btnKillAllAria2.Disposing || btnKillAllAria2.IsDisposed))
+                    return;
+
+                btnKillAllAria2.Invoke(new MethodInvoker(() => btnKillAllAria2_Click(this, e)));
+                return;//返回是为了不调用下面的非Invoke方法
+            }
+
+            //主线程调用的话不要Invoke
+            btnKillAllAria2_Click(this, e);
+        }
+
+        private void OnDownloadError(Aria2cTaskEvent taskEvent, object obj)
         {
             var TAG2 = "下载状态更新";
             var uri = taskEvent.Task.Files[0].Uris[0].Uri.ToString();
@@ -1103,13 +1505,13 @@ namespace HLS.Download.UI
                     {
                         if (mSelectedBandwidth == null)
                         {
-                            WriteLog(TAG, string.Format("停止下载视频流切片；因为存在多码率，且没有选择多码率下载策略或自定义码率无效:{0}", mSelectedBandwidth));
+                            WriteLog(TAG, string.Format("停止下载视频流切片；因为存在多码率，且没有选择多码率下载策略或自定义码率无效：{0}", mSelectedBandwidth));
 
                             WriteLog(TAG, "支持的码率有：");
                             for (var pi = 0; pi < r.Playlist.Length; pi++)
                             {
                                 var p = r.Playlist[pi];
-                                WriteLog(TAG, String.Format("{0}:码率={1},分辨率={2}", pi + 1, p.BANDWIDTH, p.RESOLUTION));
+                                WriteLog(TAG, String.Format("{0}：码率={1}，分辨率={2}", pi + 1, p.BANDWIDTH, p.RESOLUTION));
                             }
                             return;
                         }
@@ -1141,21 +1543,21 @@ namespace HLS.Download.UI
                         //自定义模式，匹配失败时，将所有码率输出来，方便定位。
                         if (nextPlaylist == null)
                         {
-                            WriteLog(TAG, string.Format("自定义码率匹配失败；自定义码率设置无效:{0}", mSelectedBandwidth));
+                            WriteLog(TAG, string.Format("自定义码率匹配失败；自定义码率设置无效：{0}", mSelectedBandwidth));
 
                             WriteLog(TAG, "支持的码率有：");
                             for (var pi = 0; pi < r.Playlist.Length; pi++)
                             {
                                 var p = r.Playlist[pi];
-                                WriteLog(TAG, String.Format("{0}:码率={1},分辨率={2}", pi + 1, p.BANDWIDTH, p.RESOLUTION));
+                                WriteLog(TAG, String.Format("{0}：码率={1}，分辨率={2}", pi + 1, p.BANDWIDTH, p.RESOLUTION));
                             }
                             return;
                         }
                     }
                     #endregion
 
-                    WriteLog(TAG, String.Format("下载指定码率={0},分辨率={1}", nextPlaylist.BANDWIDTH, nextPlaylist.RESOLUTION));
-                    WriteLog(TAG, "下载指定码率:路径=" + nextPlaylist.URI);
+                    WriteLog(TAG, String.Format("下载指定码率={0}，分辨率={1}", nextPlaylist.BANDWIDTH, nextPlaylist.RESOLUTION));
+                    WriteLog(TAG, "下载指定码率：路径=" + nextPlaylist.URI);
 
                     //当下载了 index.m3u8 后指向了具体码率的 4405kb/hls/index.m3u8 此时因为文件名都是一样的，导致有BUG，会忽略下载。
                     if (Path.GetFileName(baseUri.AbsoluteUri) == Path.GetFileName(RemoveUriParas(nextPlaylist.URI)))
@@ -1163,9 +1565,12 @@ namespace HLS.Download.UI
                         File.Move(file.Path, file.Path + ".old.m3u8");
 
                     var url = new Uri(baseUri, nextPlaylist.URI).AbsoluteUri;
-                    var gid = mAria2c.AddUri(url, "", dir, mSelectedUserAgent);
+                    var _name = "";
+                    if (Path.GetExtension(RemoveUriParas(nextPlaylist.URI)).ToLower() != ".m3u8")
+                        _name = Path.GetFileName(RemoveUriParas(nextPlaylist.URI)) + ".m3u8";
+                    var gid = mAria2c.AddUri(url, _name, dir, mSelectedUserAgent);
                     mAria2c.ChangePosition(gid, 0, PosType.POS_SET); //将m3u8任务放到下载队列最前面，优先级最高，避免切片下完才下该m3u8
-                    WriteLog(TAG, string.Format("下载指定码率:任务ID={0}", gid));
+                    WriteLog(TAG, string.Format("下载指定码率：任务ID={0}", gid));
                 }
                 else
                 {
@@ -1193,9 +1598,11 @@ namespace HLS.Download.UI
                     foreach (var p in r.Parts)
                     {
                         var url = "";
-                        if (p.Path.IndexOf("://") > -1) { //p.Path本身就是完整地址，不需要基础Url
+                        if (p.Path.IndexOf("://") > -1)
+                        { //p.Path本身就是完整地址，不需要基础Url
                             url = new Uri(p.Path).AbsoluteUri;
-                        }else
+                        }
+                        else
                         {
                             url = new Uri(baseUri, p.Path).AbsoluteUri;
                         }
@@ -1322,13 +1729,13 @@ namespace HLS.Download.UI
                     {
                         if (mSelectedBandwidth == null)
                         {
-                            WriteLog(TAG, string.Format("停止下载视频流切片；因为存在多码率，且没有选择多码率下载策略或自定义码率无效:{0}", mSelectedBandwidth));
+                            WriteLog(TAG, string.Format("停止下载视频流切片；因为存在多码率，且没有选择多码率下载策略或自定义码率无效：{0}", mSelectedBandwidth));
 
                             WriteLog(TAG, "支持的码率有：");
                             for (var pi = 0; pi < r.Playlist.Length; pi++)
                             {
                                 var p = r.Playlist[pi];
-                                WriteLog(TAG, String.Format("{0}:码率={1},分辨率={2}", pi + 1, p.BANDWIDTH, p.RESOLUTION));
+                                WriteLog(TAG, String.Format("{0}：码率={1}，分辨率={2}", pi + 1, p.BANDWIDTH, p.RESOLUTION));
                             }
                             return;
                         }
@@ -1360,21 +1767,21 @@ namespace HLS.Download.UI
                         //自定义模式，匹配失败时，将所有码率输出来，方便定位。
                         if (nextPlaylist == null)
                         {
-                            WriteLog(TAG, string.Format("自定义码率匹配失败；自定义码率设置无效:{0}", mSelectedBandwidth));
+                            WriteLog(TAG, string.Format("自定义码率匹配失败；自定义码率设置无效：{0}", mSelectedBandwidth));
 
                             WriteLog(TAG, "支持的码率有：");
                             for (var pi = 0; pi < r.Playlist.Length; pi++)
                             {
                                 var p = r.Playlist[pi];
-                                WriteLog(TAG, String.Format("{0}:码率={1},分辨率={2}", pi + 1, p.BANDWIDTH, p.RESOLUTION));
+                                WriteLog(TAG, String.Format("{0}：码率={1}，分辨率={2}", pi + 1, p.BANDWIDTH, p.RESOLUTION));
                             }
                             return;
                         }
                     }
                     #endregion
 
-                    WriteLog(TAG, String.Format("下载指定码率={0},分辨率={1}", nextPlaylist.BANDWIDTH, nextPlaylist.RESOLUTION));
-                    WriteLog(TAG, "下载指定码率:路径=" + nextPlaylist.URI);
+                    WriteLog(TAG, String.Format("下载指定码率={0}，分辨率={1}", nextPlaylist.BANDWIDTH, nextPlaylist.RESOLUTION));
+                    WriteLog(TAG, "下载指定码率：路径=" + nextPlaylist.URI);
 
                     //当下载了 index.m3u8 后指向了具体码率的 4405kb/hls/index.m3u8 此时因为文件名都是一样的，导致有BUG，会忽略下载。
                     if (Path.GetFileName(baseUri.AbsoluteUri) == Path.GetFileName(RemoveUriParas(nextPlaylist.URI)))
@@ -1382,9 +1789,12 @@ namespace HLS.Download.UI
                         File.Move(filePath, filePath + ".old.m3u8");
 
                     var url = new Uri(baseUri, nextPlaylist.URI).AbsoluteUri;
-                    var gid = mAria2c.AddUri(url, "", dir, mSelectedUserAgent);
+                    var _name = "";
+                    if (Path.GetExtension(RemoveUriParas(nextPlaylist.URI)).ToLower() != ".m3u8")
+                        _name = Path.GetFileName(RemoveUriParas(nextPlaylist.URI)) + ".m3u8";
+                    var gid = mAria2c.AddUri(url, _name, dir, mSelectedUserAgent);
                     mAria2c.ChangePosition(gid, 0, PosType.POS_SET); //将m3u8任务放到下载队列最前面，优先级最高，避免切片下完才下该m3u8
-                    WriteLog(TAG, string.Format("下载指定码率:任务ID={0}", gid));
+                    WriteLog(TAG, string.Format("下载指定码率：任务ID={0}", gid));
                 }
                 else
                 {
@@ -1413,7 +1823,7 @@ namespace HLS.Download.UI
                     {
                         var url = "";
                         if (p.Path.IndexOf("://") > -1)//p.Path本身就是完整地址，不需要基础Url
-                        { 
+                        {
                             url = new Uri(p.Path).AbsoluteUri;
                         }
                         else
@@ -1702,7 +2112,7 @@ namespace HLS.Download.UI
             Cursor.Current = Cursors.WaitCursor;
             var TAG = "合并";
             WriteLog(null, Environment.NewLine);
-            WriteLog(TAG, "执行中");            
+            WriteLog(TAG, "执行中");
             try
             {
                 //检测必要的程序都存在
@@ -1905,13 +2315,14 @@ namespace HLS.Download.UI
                                 cmdProcess.EnableRaisingEvents = true;
                                 cmdProcess.Exited += (object _sender, EventArgs _e) =>
                                 {
-                                    WriteLog(TAG, string.Format("-->子目录“{0}”已合并完毕！", dirName));
+                                    WriteLog(TAG, string.Format("-->子目录“{0}”已合并完毕，请确认", dirName));
                                     Process p = (Process)_sender;
                                     if (dealProcessList.Contains(p))
                                         dealProcessList.Remove(p);
                                     p.Dispose();
                                 };
                                 cmdProcess.Start();
+                                WriteLog(TAG, string.Format("请等待批处理“{0}”执行...", Path.GetFileName(cmdPath)));
 
                                 dealProcessList.Add(cmdProcess);
                             }
@@ -1929,7 +2340,7 @@ namespace HLS.Download.UI
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                WriteLog(TAG, "执行完毕，请等待批处理执行...");
+                WriteLog(TAG, "执行完毕");
                 Cursor.Current = Cursors.Default;
                 ((Button)sender).Enabled = true;
             }
@@ -2266,7 +2677,6 @@ namespace HLS.Download.UI
             //readM3U8Thread = null;
             StopTimer();
             mAria2c = null;
-            Program.CloseSingletonInstanceMutex();
             SaveConfig(TAG);
 
             var logPath = Path.Combine(Environment.CurrentDirectory, "Log\\");
@@ -2281,6 +2691,7 @@ namespace HLS.Download.UI
             notifyIconTray.Dispose();
             notifyIconTray = null;
             //关闭程序
+            Program.CloseSingletonInstanceMutex();
             this.Dispose(true);
             Application.Exit();
         }
@@ -2369,6 +2780,7 @@ namespace HLS.Download.UI
         {
             GC.Collect();
             GC.WaitForPendingFinalizers();
+            GC.Collect();
         }
 
         /// <summary>
@@ -2982,7 +3394,7 @@ namespace HLS.Download.UI
                             cmdProcess.EnableRaisingEvents = true;
                             cmdProcess.Exited += (_sender, _e) =>
                             {
-                                WriteLog(TAG, string.Format("-->目录“{0}”已自动合并完毕", dirName));
+                                WriteLog(TAG, string.Format("-->目录“{0}”自动合并完毕，请确认", dirName));
                                 (_sender as Process).Dispose();
 
                                 //ProcessStartInfo psi = new ProcessStartInfo("Explorer.exe");
@@ -2991,6 +3403,7 @@ namespace HLS.Download.UI
                                 //Process.Start(psi);
                             };
                             cmdProcess.Start();
+                            WriteLog(TAG, string.Format("请等待批处理“{0}”执行...", Path.GetFileName(cmdPath)));
                         }
                     }
                 }
@@ -3003,7 +3416,7 @@ namespace HLS.Download.UI
             }
             finally
             {
-                WriteLog(TAG, "执行完毕，请等待批处理执行...");
+                WriteLog(TAG, "执行完毕");
                 lock (SequenceLock)
                 {
                     if (mDownDirAndTaskCountMap.ContainsKey(dir))
@@ -3013,5 +3426,29 @@ namespace HLS.Download.UI
                 Thread.CurrentThread.Join();
             }
         }
+    }
+
+    /* 进程间使用无效，本进程会直接卡死。推测同一进程内可能有效
+    /// <summary>
+    /// 自定义传输数据的结构体
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
+    public struct STRSTRUCT
+    {
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string str;
+    }
+    */
+
+    /// <summary>
+    /// 定义结构体
+    /// </summary>
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct COPYDATASTRUCT
+    {
+        public IntPtr dwData; //可以是任意值
+        public int cbData;    //指定lpData内存区域的字节数
+        [MarshalAs(UnmanagedType.LPWStr)]
+        public string lpData; //发送给目录窗口所在进程的数据
     }
 }
