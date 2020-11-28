@@ -52,6 +52,8 @@ namespace m3u8dl.service
 
         [DllImport("User32.dll", CharSet = CharSet.Unicode, EntryPoint = "FindWindow")]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+        //[DllImport("User32.dll", CharSet = CharSet.Unicode, EntryPoint = "FindWindowEx")]
+        //private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpClassName, string lpWindowName);
 
         public M3u8dlServiceForm()
         {

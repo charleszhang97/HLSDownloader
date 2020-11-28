@@ -666,6 +666,7 @@ namespace HLS.Download.UI
                     if (downloadSpeedLimit != "")
                         txbMaxDownloadSpeed.Text = downloadSpeedLimit;
 
+                    txbMergeCMD.Tag = txbMergeCMD.Text;//将默认值保存到Tag
                     string configFileName = INIHelper.Read("Aria2", "ConfigFileName", "", iniPath);
                     if (configFileName != "")
                     {
@@ -2862,13 +2863,22 @@ namespace HLS.Download.UI
         {
             var config_name = Path.GetFileNameWithoutExtension(cbbConfigFileName.Text);
             string cmdFileName = "FFmpeg\\";
-            if (config_name == "aria2c")
-                cmdFileName += "cmd.txt";
+            if (config_name == "aria2c") {
+                if (File.Exists(Path.Combine(Environment.CurrentDirectory, "FFmpeg\\aria2c.txt")))
+                    cmdFileName += "aria2c.txt";
+                else
+                    cmdFileName += "cmd.txt";
+            }
             else
                 cmdFileName += config_name + ".txt";
             if (File.Exists(Path.Combine(Environment.CurrentDirectory, cmdFileName)))
             {
                 txbMergeCMD.Text = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, cmdFileName), Encoding.Default);
+            }
+            else {
+                //txbMergeCMD.Text = File.ReadAllText(Path.Combine(Environment.CurrentDirectory, "FFmpeg\\cmd.txt"), Encoding.Default);
+                //txbMergeCMD.ResetText();//清空，此处不适用
+                txbMergeCMD.Text = txbMergeCMD.Tag.ToString();
             }
         }
 
@@ -3425,6 +3435,11 @@ namespace HLS.Download.UI
                 //Thread.CurrentThread.Abort();
                 Thread.CurrentThread.Join();
             }
+        }
+
+        private void vsbMergeCMD_Scroll(object sender, ScrollEventArgs e)
+        {
+
         }
     }
 
