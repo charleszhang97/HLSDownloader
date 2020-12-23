@@ -38,19 +38,19 @@ https://ffmpeg.org/download.html#build-windows
 ----------------------------------------------------------------------------------------------------
 
 ## 新版本说明
-	93.Ye.M3U8.Downloader v2.0，更名为HLSDownloader，个人在原版基础上修改、优化。程序运行需要.NET Framework 4.6或更高版本。仅支持点播HLS视频，不支持直播类视频。另外，程序使用XML-RPC与Aria2通信，不是常见的JSON-RPC。除了HLS链接(`http://xxx/xxx.m3u8`)，还支持其他各种下载链接，本程序支持的所有URL类型参考使用说明15。
+```　　93.Ye.M3U8.Downloader v2.0，更名为HLSDownloader，个人在原版基础上修改、优化。程序运行需要.NET Framework 4.6或更高版本。仅支持点播HLS视频，不支持直播类视频。另外，程序使用XML-RPC与Aria2通信，不是常见的JSON-RPC。除了HLS链接(`http://xxx/xxx.m3u8`)，还支持其他各种下载链接，本程序支持的所有URL类型参考使用说明15。```
 
 ## 项目地址
 https://github.com/charleszhang97/HLSDownloader  
 https://gitee.com/charles97/HLSDownloader  
 
 ## WebUI
-程序使用的WebUI项目地址如下： 
+程序使用的WebUI项目地址如下：  
 https://github.com/ziahamza/webui-aria2  
 https://github.com/mayswind/AriaNg  
 
 ## ED2K
-如果需要程序处理ED2K链接，则需要下载Windows版aMule：
+如果需要程序处理ED2K链接，则需要下载Windows版aMule：  
 https://github.com/kurniliya/amule-for-windows/releases  
 
 ## 使用说明
@@ -81,7 +81,7 @@ https://github.com/kurniliya/amule-for-windows/releases
 
 11. 手动合并时，如果HLS任务的切片不完整，会自动统计出缺失的切片清单。
 
-12. 手动合并（以及自动合并）生成批处理脚本时，以系统默认编码保存，如果有Unicode字符会出现乱码，这时程序自动以UTF-8保存bat文件，并添加一行“CHCP 65001”到头部，保证批处理能执行（echo等命令可能显示异常，与CMD窗口的默认字体设定有关）。
+12. 手动合并（以及自动合并）生成批处理脚本时，以系统默认编码保存，如果有Unicode字符会出现乱码，这时程序自动以UTF-8保存bat文件，并添加一行“`CHCP 65001`”到头部，保证批处理能执行（echo等命令可能显示异常，与CMD窗口的默认字体设定有关）。
 
 13. 最大上传速度限制，没有专门输入框，方法是在最大下载速度输入框输入整数后，“应用”按钮上右键，即可应用最大上传速度。
 
