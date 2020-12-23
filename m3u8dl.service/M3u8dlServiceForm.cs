@@ -76,6 +76,15 @@ namespace m3u8dl.service
         {
             if (args.Length == 1 && args[0].IndexOf("://") > -1)//Url协议对程序进行参数调用
             {
+                /* m3u8dl://XXX 和 aria2c-args-append="--header=Origin:https://xxx.com"
+                 * 第一种需要处理，第二种应该跳过
+                 */
+                if (args[0].Substring(0, args[0].IndexOf("://")).Contains("="))//普通参数，非url协议
+                {
+                    this.parameters = args;
+                    return;
+                }
+
                 if (args[0].IndexOf('%') > -1) //Chrome会将|等分割符号编码，这里判断有编码的进行解码
                     args[0] = Uri.UnescapeDataString(args[0]);
 
@@ -190,6 +199,10 @@ namespace m3u8dl.service
                             switch (_key)
                             {
                                 case "decode":
+                                    WriteLog(TAG, string.Format("参数名：{0}，参数值：{1}", _key, _value));
+                                    args += string.Format(formatString, _key, _value);
+                                    break;
+                                case "startup":
                                     WriteLog(TAG, string.Format("参数名：{0}，参数值：{1}", _key, _value));
                                     args += string.Format(formatString, _key, _value);
                                     break;
@@ -392,7 +405,7 @@ namespace m3u8dl.service
             }
             if (windowHandle == IntPtr.Zero) //按进程名查找失败
             {
-                windowHandle = FindWindow(null, "HLS视频流下载器");
+                windowHandle = FindWindow(null, "HLS下载器");
             }
             return windowHandle;
         }

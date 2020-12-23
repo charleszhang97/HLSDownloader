@@ -1,9 +1,9 @@
-﻿
-namespace FlyVR.Aria2
+﻿namespace FlyVR.Aria2
 {
     using System;
     using System.Diagnostics;
     using System.IO;
+    using System.Reflection;
     using System.Text;
 
     public sealed class Aria2cRuntime
@@ -28,7 +28,7 @@ namespace FlyVR.Aria2
             }
             set
             {
-                aria2cHost = value;                
+                aria2cHost = value;
             }
         }
 
@@ -94,14 +94,22 @@ namespace FlyVR.Aria2
                 try
                 {
                     downLoadDirectory = Aria2cWarpper.DownLoadDirectory;
-
-                    if (downLoadDirectory.IndexOf(':') == 1 /*&& Path.IsPathRooted(strCustomPath)*/)//绝对路径，包含盘符，不作处理
-                    {}
+                    //绝对路径，包含盘符，不作处理
+                    if (downLoadDirectory.IndexOf(':') == 1 /*&& Path.IsPathRooted(downLoadDirectory)*/ && Directory.Exists(downLoadDirectory))
+                    { }
                     else//相对路径，拼接
                     {
                         try
                         {
-                            var aria2Path = Path.Combine(Environment.CurrentDirectory, "Aria2");                            
+                            //var aria2Path = Path.Combine(Environment.CurrentDirectory, "Aria2");//某些情况下不准确
+                            //var aria2Path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Aria2");//准确
+                            var aria2Path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Aria2");//准确
+
+                            //自定义Aria2路径时，不一定是在程序目录下
+                            var _settings = _Aria2cSettings ?? new Aria2cSettings();
+                            if (!string.IsNullOrWhiteSpace(_settings.Aria2Path))
+                                aria2Path = Path.GetDirectoryName(_settings.Aria2Path);
+
                             downLoadDirectory = Path.GetFullPath(Path.Combine(aria2Path, downLoadDirectory));
                         }
                         catch { }
@@ -178,7 +186,7 @@ namespace FlyVR.Aria2
         /// <returns></returns>
         public static void Start()
         {
-            if (/*!IsLoaded && 外界已经做了检查所以不再检测一遍提升启动速度。*/File.Exists(Settings.Aria2Path))
+            if (!IsLoaded && File.Exists(Settings.Aria2Path))
             {
                 StartProcess(Settings.Aria2Path, Settings.Aria2Args);
             }
@@ -218,10 +226,10 @@ namespace FlyVR.Aria2
                     }
                     else
                     {
-                        args = " --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all --rpc-listen-port="+ Settings.Aria2Port + " -c -D";
+                        args = " --enable-rpc --rpc-listen-all=true --rpc-allow-origin-all --rpc-listen-port=" + Settings.Aria2Port + " -c -D";
                     }
                     Settings.Aria2Args = args;
-                }                
+                }
 
                 var psi = new ProcessStartInfo(path, args);
                 psi.WorkingDirectory = aria2Dir;
@@ -234,8 +242,9 @@ namespace FlyVR.Aria2
             }
             catch (Exception ex)
             {
-                throw ex;
+                //throw ex;
                 // Logger.Debug(ex);
+                Console.WriteLine(ex);
             }
         }
 

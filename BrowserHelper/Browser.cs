@@ -25,7 +25,6 @@ namespace BrowserHelper
                     openKey = @"SOFTWARE\Google\Chrome";
                 }
                 appPath = Registry.LocalMachine.OpenSubKey(openKey);
-                // 存在谷歌浏览器就用谷歌打开，没找到就用系统默认的浏览器
                 // 谷歌卸载了，注册表还没有清空，程序会返回一个"系统找不到指定的文件。"的bug
                 if (appPath != null)
                 {
@@ -75,33 +74,35 @@ namespace BrowserHelper
                 // at System.Diagnostics.process.StartWithshellExecuteEx(ProcessStartInfo startInfo)注意这个错误
                 try
                 {
-                    if (File.Exists(@"C:\Program Files\Internet Explorer\iexplore.exe"))
+                    var programFilesFolder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                    if (File.Exists(programFilesFolder + @"\Internet Explorer\iexplore.exe"))
                     {
                         ProcessStartInfo processStartInfo = new ProcessStartInfo
                         {
-                            FileName = @"C:\Program Files\Internet Explorer\iexplore.exe",
+                            FileName = programFilesFolder + @"\Internet Explorer\iexplore.exe",
                             Arguments = url,
                             UseShellExecute = false,
-                            CreateNoWindow = true
+                            CreateNoWindow = false
                         };
                         Process.Start(processStartInfo);
                     }
                     else
                     {
-                        if (File.Exists(@"C:\Program Files (x86)\Internet Explorer\iexplore.exe"))
+                        programFilesFolder = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+                        if (File.Exists(programFilesFolder + @"\Internet Explorer\iexplore.exe"))
                         {
                             ProcessStartInfo processStartInfo = new ProcessStartInfo
                             {
-                                FileName = @"C:\Program Files (x86)\Internet Explorer\iexplore.exe",
+                                FileName = programFilesFolder + @"\Internet Explorer\iexplore.exe",
                                 Arguments = url,
                                 UseShellExecute = false,
-                                CreateNoWindow = true
+                                CreateNoWindow = false
                             };
                             Process.Start(processStartInfo);                            
                         }
                         else
                         {
-                            if (MessageBox.Show(@"系统未安装IE浏览器，是否下载安装？", null, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question) == DialogResult.Yes)
+                            if (MessageBox.Show(@"系统未安装IE浏览器，是否下载安装？", "提示", MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question) == DialogResult.Yes)
                             {
                                 // 打开下载链接，从微软官网下载
                                 OpenDefaultBrowser("http://windows.microsoft.com/zh-cn/internet-explorer/download-ie");
@@ -170,7 +171,7 @@ namespace BrowserHelper
             }
             catch (Exception error)
             {
-                MessageBox.Show("无法使用默认浏览器：\\n" + error.Message);
+                MessageBox.Show("无法使用默认浏览器：\n" + error.Message);
                 return false;
             }
             finally

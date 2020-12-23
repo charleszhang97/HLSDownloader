@@ -97,7 +97,7 @@ namespace FlyVR.Aria2
         /// <param name="args">磁链接文件转换成64位编码字符串</param>
         /// 详情参考 http://aria2.github.io/manual/en/html/aria2c.html#aria2.addMetalink
         [XmlRpcMethod("aria2.addMetalink")]
-        string AddMetalink(string secret, byte[] metalink);
+        string[] AddMetalink(string secret, byte[] metalink);
 
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace FlyVR.Aria2
         /// <param name="options">下载参数</param>
         /// 详情参考 http://aria2.github.io/manual/en/html/aria2c.html#aria2.addMetalink
         [XmlRpcMethod("aria2.addMetalink")]
-        string AddMetalink(string secret, byte[] metalink, XmlRpcStruct options);
+        string[] AddMetalink(string secret, byte[] metalink, XmlRpcStruct options);
 
 
         /// <summary>
@@ -118,7 +118,7 @@ namespace FlyVR.Aria2
         /// <param name="position">插入任务列表位置</param>
         /// 详情参考 http://aria2.github.io/manual/en/html/aria2c.html#aria2.addMetalink
         [XmlRpcMethod("aria2.addMetalink")]
-        string AddMetalink(string secret, byte[] metalink, XmlRpcStruct options, int position);
+        string[] AddMetalink(string secret, byte[] metalink, XmlRpcStruct options, int position);
 
         /// <summary>
         /// 移除下载任务
@@ -202,7 +202,7 @@ namespace FlyVR.Aria2
         /// 详情参考 http://aria2.github.io/manual/en/html/aria2c.html#aria2.tellStatus
         /// <returns>下载任务的属性信息</returns>
         [XmlRpcMethod("aria2.tellStatus")]
-        XmlRpcStruct TellStatus(string secret, string gid, params string[] keys);
+        XmlRpcStruct TellStatus(string secret, string gid, string[] keys);
 
         /// <summary>
         /// 获取任务的所有下载地址链接
@@ -249,7 +249,7 @@ namespace FlyVR.Aria2
         /// <returns>所有正在下载的任务信息列表</returns>
         /// 详情参考 http://aria2.github.io/manual/en/html/aria2c.html#aria2.tellActive
         [XmlRpcMethod("aria2.tellActive")]
-        XmlRpcStruct[] TellActive(string secret, params string[] keys);
+        XmlRpcStruct[] TellActive(string secret, string[] keys);
 
 
         /// <summary>
@@ -261,7 +261,7 @@ namespace FlyVR.Aria2
         /// <returns>正在暂停或等待的任务信息列表</returns>
         /// 详情参考 http://aria2.github.io/manual/en/html/aria2c.html#aria2.tellWaiting
         [XmlRpcMethod("aria2.tellWaiting")]
-        XmlRpcStruct[] TellWaiting(string secret, int offset, int num, params string[] keys);
+        XmlRpcStruct[] TellWaiting(string secret, int offset, int num, string[] keys);
 
         /// <summary>
         /// 已停止的任务信息列表
@@ -272,7 +272,7 @@ namespace FlyVR.Aria2
         /// <returns>已停止任务信息列表</returns>
         /// 详情参考 http://aria2.github.io/manual/en/html/aria2c.html#aria2.tellStopped
         [XmlRpcMethod("aria2.tellStopped")]
-        XmlRpcStruct[] TellStopped(string secret, int offset, int num, params string[] keys);
+        XmlRpcStruct[] TellStopped(string secret, int offset, int num, string[] keys);
 
         /// <summary>
         /// 更改下载任务在列表中的顺序

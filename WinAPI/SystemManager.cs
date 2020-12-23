@@ -1,11 +1,11 @@
-﻿using System;
+﻿#region 禁用以下代码，目前用不到
+/*
+using System;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 namespace WinAPI.SystemManager
 {
-    #region 禁用以下代码，目前用不到
-    /*
     /// <summary>
     /// 枚举类型,指定可以允许的重启操作
     /// </summary>
@@ -334,6 +334,6 @@ namespace WinAPI.SystemManager
         /// <param name="message">The message that describes the error.</param>
         public PrivilegeException(string message) : base(message) { }
     }
-    */
-    #endregion
 }
+*/
+#endregion

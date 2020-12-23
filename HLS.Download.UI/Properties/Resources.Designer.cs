@@ -63,9 +63,9 @@ namespace HLS.Download.UI.Properties {
         /// <summary>
         ///   查找类似于 (Icon) 的 System.Drawing.Icon 类型的本地化资源。
         /// </summary>
-        internal static System.Drawing.Icon App48X48 {
+        internal static System.Drawing.Icon App {
             get {
-                object obj = ResourceManager.GetObject("App48X48", resourceCulture);
+                object obj = ResourceManager.GetObject("App", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
@@ -91,21 +91,12 @@ namespace HLS.Download.UI.Properties {
         }
         
         /// <summary>
-        ///   查找类似于 System.IO.MemoryStream 的 System.IO.UnmanagedMemoryStream 类型的本地化资源。
+        ///   查找 System.Drawing.Bitmap 类型的本地化资源。
         /// </summary>
-        internal static System.IO.UnmanagedMemoryStream download_complete {
+        internal static System.Drawing.Bitmap clear {
             get {
-                return ResourceManager.GetStream("download_complete", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   查找 System.Byte[] 类型的本地化资源。
-        /// </summary>
-        internal static byte[] webui_aria2 {
-            get {
-                object obj = ResourceManager.GetObject("webui_aria2", resourceCulture);
-                return ((byte[])(obj));
+                object obj = ResourceManager.GetObject("clear", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

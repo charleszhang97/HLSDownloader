@@ -62,7 +62,8 @@ namespace FlyVR.Aria2
                 }
                 else
                 {
-                    throw new Exception("Aria2cFile不包含该属性");
+                    //throw new Exception("Aria2cFile不包含该属性");
+                    Console.WriteLine("Aria2cFile不包含该属性");
                 }
             }
         }

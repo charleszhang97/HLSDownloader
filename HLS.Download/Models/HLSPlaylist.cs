@@ -58,5 +58,7 @@
         public string CODECS { get; set; }
         public string RESOLUTION { get; set; }
         public string URI { get; set; }
+        public string AUDIO { get; set; }
+        public string VIDEO { get; set; }
     }
 }

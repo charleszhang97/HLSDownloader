@@ -154,7 +154,8 @@ namespace FlyVR.Aria2
                 }
                 else
                 {
-                    throw new Exception("Aria2cTask不包含该属性");
+                    //throw new Exception("Aria2cTask不包含该属性");
+                    Console.WriteLine("Aria2cTask不包含该属性");
                 }
             }
         }
@@ -192,7 +193,9 @@ namespace FlyVR.Aria2
             }
             else
             {
-                throw new Exception("Aria2cTaskStatus不包含该属性");
+                //throw new Exception("Aria2cTaskStatus不包含该属性");
+                Console.WriteLine("Aria2cTaskStatus不包含该属性");
+                return Aria2cTaskStatus.Error;
             }
         }
 

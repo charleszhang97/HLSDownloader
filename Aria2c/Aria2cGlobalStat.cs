@@ -57,7 +57,8 @@ namespace FlyVR.Aria2
                 }
                 else
                 {
-                    throw new Exception("无法将属性转换到Aria2cGlobalStat中");
+                    //throw new Exception("无法将属性转换到Aria2cGlobalStat中");
+                    Console.WriteLine("无法将属性转换到Aria2cGlobalStat中");
                 }
             }
         }

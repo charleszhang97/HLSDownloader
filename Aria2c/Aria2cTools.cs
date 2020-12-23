@@ -171,7 +171,9 @@
                 }
             }
 
-            throw new Exception("XmlRpcStruct中不包含该主键");
+            //throw new Exception("XmlRpcStruct中不包含该主键");
+            Console.WriteLine("XmlRpcStruct中不包含该主键");
+            return valueList.Count > 0 ? valueList[0] : new object();
         }
 
         /// <summary>

@@ -77,7 +77,8 @@ namespace FlyVR.Aria2
                 }
                 else
                 {
-                    throw new Exception("无法将属性转换到Aria2cPeers中");
+                    //throw new Exception("无法将属性转换到Aria2cPeers中");
+                    Console.WriteLine("无法将属性转换到Aria2cPeers中");
                 }
             }
         }

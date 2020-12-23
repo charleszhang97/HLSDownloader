@@ -60,7 +60,8 @@ namespace FlyVR.Aria2
                 }
                 else
                 {
-                    throw new Exception("无法将属性转换到Aria2cUri中");
+                    //throw new Exception("无法将属性转换到Aria2cUri中");
+                    Console.WriteLine("无法将属性转换到Aria2cUri中");
                 }
 
             }
@@ -83,7 +84,9 @@ namespace FlyVR.Aria2
             }
             else
             {
-                throw new Exception("Aria2cUriStatusAria2cFile不包含该属性");
+                //throw new Exception("Aria2cUriStatusAria2cFile不包含该属性");
+                Console.WriteLine("Aria2cUriStatusAria2cFile不包含该属性");
+                return Aria2cUriStatus.Used;
             }
         }
 

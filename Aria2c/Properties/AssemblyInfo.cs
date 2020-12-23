@@ -7,11 +7,11 @@ using System.Windows;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("aria2c")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("FlyVR.Aria2")]
+[assembly: AssemblyDescription("https://github.com/isRight/Aria2-CSharp")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("aria2c")]
+[assembly: AssemblyCompany("isRight")]
+[assembly: AssemblyProduct("FlyVR.Aria2")]
 [assembly: AssemblyCopyright("Copyright © 2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

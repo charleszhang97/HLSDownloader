@@ -15,6 +15,8 @@ namespace FlyVR.Aria2
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
+    using System.Security.Cryptography;
 
     internal sealed class Aria2cWarpper
     {
@@ -118,17 +120,74 @@ namespace FlyVR.Aria2
         }
 
         /// <summary>
+        /// 添加下载任务
+        /// </summary>
+        /// <param name="uri">下载地址</param>
+        /// <param name="fileName">输出文件名</param>
+        /// <param name="dir">下载文件夹</param>
+        /// <param name="taskOptions">下载任务选项（需要拆分）</param>
+        /// <returns>成功返回任务标识符，失败返回空</returns>
+        public static string AddUri(string uri, string fileName = "", string dir = "", List<Dictionary<string, string>> taskOptions = null)
+        {
+            string[] uris = new string[] { uri };
+            string gid;
+            XmlRpcStruct option = new XmlRpcStruct();
+
+            if (dir != "")
+            {
+                option.Add("dir", dir);
+            }
+
+            if (fileName != "")
+            {
+                option.Add("out", fileName);
+            }
+
+            if (taskOptions != null && taskOptions.Count > 0)
+            {
+                string header = "";
+                foreach (Dictionary<string, string> dicElement in taskOptions)
+                {
+                    foreach (KeyValuePair<string, string> item in dicElement)
+                    {
+                        if (item.Key == "header")
+                            header += item.Value + Environment.NewLine;
+                        else
+                            option.Add(item.Key, item.Value);
+                    }
+                }
+                if (header != "")
+                {
+                    option.Add("header", header.Trim(Environment.NewLine.ToCharArray()));
+                }
+            }
+
+            if (option.Count > 0)
+            {
+                gid = aria2c.AddUri(Aria2cRpcSecret, uris, option);
+            }
+            else
+            {
+                gid = aria2c.AddUri(Aria2cRpcSecret, uris);
+            }
+
+            return gid;
+        }
+
+        /// <summary>
         /// 下载种子链接文件
         /// </summary>
         /// <param name="torrent">种子文件</param>
         /// <param name="fileName">输出文件名</param>
         /// <param name="dir">下载目录</param>
         /// <returns>成功返回任务标识符，失败返回空</returns>
-        public static string AddTorrent(string torrent, string fileName = "", string dir = "")
+        public static string AddTorrent(ref string strSHA1Hex, string torrent, string fileName = "", string dir = "")
         {
-            FileStream fs = File.Open(torrent, FileMode.Open);
+            FileStream fs = File.Open(torrent, FileMode.Open, FileAccess.Read);
             byte[] bytes = new byte[fs.Length];
-            fs.Close();
+            fs.Seek(0, SeekOrigin.Begin);
+            fs.Read(bytes, 0, bytes.Length);
+            fs.Dispose();
 
             string gid;
             XmlRpcStruct option = new XmlRpcStruct();
@@ -152,20 +211,26 @@ namespace FlyVR.Aria2
                 gid = aria2c.AddTorrent(Aria2cRpcSecret, bytes);
             }
 
+            strSHA1Hex = GetSHA1HexStrOfMetadata(bytes);
+
             return gid;
         }
 
         /// <summary>
-        /// 下载磁链接文件
+        /// 下载种子链接文件
         /// </summary>
-        /// <param name="metalink">磁链接文件</param>
+        /// <param name="torrent">种子文件</param>
+        /// <param name="fileName">输出文件名</param>
         /// <param name="dir">下载目录</param>
+        /// <param name="taskOptions">下载任务选项（需要拆分）</param>
         /// <returns>成功返回任务标识符，失败返回空</returns>
-        public static string AddMetalink(string metalink, string fileName = "", string dir = "")
+        public static string AddTorrent(ref string strSHA1Hex, string torrent, string fileName = "", string dir = "", List<Dictionary<string, string>> taskOptions = null)
         {
-            FileStream fs = File.Open(metalink, FileMode.Open);
+            FileStream fs = File.Open(torrent, FileMode.Open, FileAccess.Read);
             byte[] bytes = new byte[fs.Length];
-            fs.Close();
+            fs.Seek(0, SeekOrigin.Begin);
+            fs.Read(bytes, 0, bytes.Length);
+            fs.Dispose();
 
             string gid;
             XmlRpcStruct option = new XmlRpcStruct();
@@ -180,16 +245,124 @@ namespace FlyVR.Aria2
                 option.Add("out", fileName);
             }
 
+            if (taskOptions != null && taskOptions.Count > 0)
+            {
+                foreach (Dictionary<string, string> dicElement in taskOptions)
+                {
+                    foreach (KeyValuePair<string, string> item in dicElement)
+                    {
+                        option.Add(item.Key, item.Value);
+                    }
+                }
+            }
+
             if (option.Count > 0)
             {
-                gid = aria2c.AddMetalink(Aria2cRpcSecret, bytes, option);
+                gid = aria2c.AddTorrent(Aria2cRpcSecret, bytes, new string[] { "" }, option);
             }
             else
             {
-                gid = aria2c.AddMetalink(Aria2cRpcSecret, bytes);
+                gid = aria2c.AddTorrent(Aria2cRpcSecret, bytes);
             }
 
+            strSHA1Hex = GetSHA1HexStrOfMetadata(bytes);
+
             return gid;
+        }
+
+        /// <summary>
+        /// 下载磁链接文件
+        /// </summary>
+        /// <param name="metalink">磁链接文件</param>
+        /// <param name="dir">下载目录</param>
+        /// <returns>成功返回任务标识符数组，失败返回空数组</returns>
+        public static string[] AddMetalink(ref string strSHA1Hex, string metalink, string fileName = "", string dir = "")
+        {
+            FileStream fs = File.Open(metalink, FileMode.Open, FileAccess.Read);
+            byte[] bytes = new byte[fs.Length];
+            fs.Seek(0, SeekOrigin.Begin);
+            fs.Read(bytes, 0, bytes.Length);
+            fs.Dispose();
+
+            string[] gids;
+            XmlRpcStruct option = new XmlRpcStruct();
+
+            if (dir != "")
+            {
+                option.Add("dir", dir);
+            }
+
+            if (fileName != "")
+            {
+                option.Add("out", fileName);
+            }
+
+            if (option.Count > 0)
+            {
+                gids = aria2c.AddMetalink(Aria2cRpcSecret, bytes, option);
+            }
+            else
+            {
+                gids = aria2c.AddMetalink(Aria2cRpcSecret, bytes);
+            }
+
+            strSHA1Hex = GetSHA1HexStrOfMetadata(bytes);
+
+            return gids;
+        }
+
+        /// <summary>
+        /// 下载磁链接文件
+        /// </summary>
+        /// <param name="metalink">磁链接文件</param>
+        /// <param name="fileName">输出文件名</param>
+        /// <param name="dir">下载目录</param>
+        /// <param name="taskOptions">下载任务选项（需要拆分）</param>
+        /// <returns>成功返回任务标识符数组，失败返回空数组</returns>
+        public static string[] AddMetalink(ref string strSHA1Hex, string metalink, string fileName = "", string dir = "", List<Dictionary<string, string>> taskOptions = null)
+        {
+            FileStream fs = File.Open(metalink, FileMode.Open, FileAccess.Read);
+            byte[] bytes = new byte[fs.Length];
+            fs.Seek(0, SeekOrigin.Begin);
+            fs.Read(bytes, 0, bytes.Length);
+            fs.Dispose();
+
+            string[] gids;
+            XmlRpcStruct option = new XmlRpcStruct();
+
+            if (dir != "")
+            {
+                option.Add("dir", dir);
+            }
+
+            if (fileName != "")
+            {
+                option.Add("out", fileName);
+            }
+
+            if (taskOptions != null && taskOptions.Count > 0)
+            {
+                foreach (Dictionary<string, string> dicElement in taskOptions)
+                {
+                    foreach (KeyValuePair<string, string> item in dicElement)
+                    {
+                        option.Add(item.Key, item.Value);
+                    }
+                }
+            }
+
+            if (option.Count > 0)
+            {
+                gids = aria2c.AddMetalink(Aria2cRpcSecret, bytes, option);
+            }
+            else
+            {
+                gids = aria2c.AddMetalink(Aria2cRpcSecret, bytes);
+            }
+
+            strSHA1Hex = GetSHA1HexStrOfMetadata(bytes);
+
+            return gids;
         }
 
         /// <summary>
@@ -325,7 +498,7 @@ namespace FlyVR.Aria2
         /// <returns>成功返回种子链接信息列表，失败返回空</returns>
         public static List<Aria2cPeers> GetPeers(string gid)
         {
-            XmlRpcStruct[] xmlstruct = aria2c.GetFiles(Aria2cRpcSecret, gid);
+            XmlRpcStruct[] xmlstruct = aria2c.GetPeers(Aria2cRpcSecret, gid);
             List<Aria2cPeers> peers = Aria2cTools.ConvertToAria2cPeers(xmlstruct);
             return peers;
         }
@@ -337,7 +510,7 @@ namespace FlyVR.Aria2
         /// <returns>成功返回服务器链接列表，失败返回空</returns>
         public static List<Aria2cLink> GetServers(string gid)
         {
-            XmlRpcStruct[] xmlstruct = aria2c.GetFiles(Aria2cRpcSecret, gid);
+            XmlRpcStruct[] xmlstruct = aria2c.GetServers(Aria2cRpcSecret, gid);
             List<Aria2cLink> servers = Aria2cTools.ConvertToAria2cServers(xmlstruct);
             return servers;
         }
@@ -596,7 +769,9 @@ namespace FlyVR.Aria2
             else
             {
                 //string downDir = AppDomain.CurrentDomain.BaseDirectory + "\\DownLoad";
-                string downDir = Path.Combine(Environment.CurrentDirectory, "Download");
+                //string downDir = Path.Combine(Environment.CurrentDirectory, "Download");//某些情况下不准确
+                //string downDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Download");//准确
+                string downDir = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Download");//准确
                 if (!Directory.Exists(downDir))
                 {
                     Directory.CreateDirectory(downDir);
@@ -604,6 +779,20 @@ namespace FlyVR.Aria2
 
                 return downDir;
             }
+        }
+
+
+        /// <summary>
+        /// 获取元数据的SHA-1哈希十六进制字符串
+        /// </summary>
+        /// <param name="bytes">元数据字节数组</param>
+        /// <returns>SHA-1 hash hex string of meta data</returns>
+        private static string GetSHA1HexStrOfMetadata(byte[] bytes)
+        {
+            SHA1 iSha = SHA1.Create();
+            var hashBytes = iSha.ComputeHash(bytes);
+            iSha.Dispose();
+            return BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
         }
         #endregion
     }

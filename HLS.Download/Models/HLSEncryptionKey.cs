@@ -20,7 +20,7 @@
                 if (part.Split('=')[0] == "METHOD")
                     Method = part.Split('=')[1];
                 else if (part.Split('=')[0] == "URI")
-                    Path = part.Substring(part.IndexOf('=')+1);
+                    Path = part.Substring(part.IndexOf('=')+1).Trim('"');
                 else if (part.Split('=')[0] == "IV")
                     IV = part.Split('=')[1];
             }

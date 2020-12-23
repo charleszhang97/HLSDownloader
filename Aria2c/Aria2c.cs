@@ -13,7 +13,7 @@ namespace FlyVR.Aria2
     using System;
     using System.Collections.Generic;
     using System.IO;
-    using System.Text;
+    using System.Threading.Tasks;
     using System.Timers;
 
     public sealed class Aria2c : IDisposable
@@ -25,13 +25,16 @@ namespace FlyVR.Aria2
         private Timer timerTMP;
         private object objlock;
         private bool pauseAll;
-        private int? maxConcurrentDowns;
+        private int? maxConcDowns;
         private List<Aria2cTaskStatus> stoppedStatus;
+        private double dInterval;
+        private bool isCycle;
+        private Dictionary<string, string> gidAndTorrentOrMeta4Map;
 
         #endregion
 
         #region 构造销毁
-        public Aria2c()
+        public Aria2c(double dCycleInterval)
         {
             objlock = new object();
             globalStat = new Aria2cGlobalStat();
@@ -40,11 +43,16 @@ namespace FlyVR.Aria2
             stoppedStatus = new List<Aria2cTaskStatus>();
             stoppedStatus.AddRange(new Aria2cTaskStatus[] { Aria2cTaskStatus.Complete, /*Aria2cTaskStatus.Error,可能需要恢复下载，不移除*/ Aria2cTaskStatus.Removed });
 
+            dInterval = dCycleInterval;
             StartTimer();
+            isCycle = true;
+
+            gidAndTorrentOrMeta4Map = new Dictionary<string, string>();
         }
         public void Dispose()
         {
             StopTimer();
+            StopTmpTimer();
         }
         #endregion
 
@@ -52,7 +60,7 @@ namespace FlyVR.Aria2
         /// <summary>
         /// 是否正在运行
         /// </summary>
-        private bool IsRunning
+        private static bool IsRunning
         {
             get
             {
@@ -106,6 +114,15 @@ namespace FlyVR.Aria2
             set
             {
                 pauseAll = value;
+                if (pauseAll)
+                {
+                    StartTmpTimer();//设置暂停，计时器启动，10s后标记循环为false，保留时间刷新面板（全局状态）
+                }
+                else
+                {
+                    StopTmpTimer();
+                    isCycle = true;//取消暂停，标记循环为true
+                }
             }
         }
         #endregion
@@ -183,7 +200,8 @@ namespace FlyVR.Aria2
             if (IsRunning)
             {
                 //timer = new Timer(1000);
-                timer = new Timer(1500);//增大轮询间隔，减少cpu消耗（下载任务上千后for更新状态非常耗性能）
+                //timer = new Timer(1500);//增大轮询间隔，减少cpu消耗（下载任务上千后for更新状态非常耗性能）
+                timer = new Timer(this.dInterval);
                 timer.Elapsed += new ElapsedEventHandler(OnTimeOut);
 
                 //设置为False，以便超时后触发一次事件就停止。必须再调用一次Start才能继续下一次触发。
@@ -196,7 +214,8 @@ namespace FlyVR.Aria2
             }
             else
             {
-                throw new Exception("服务未初始化");
+                //throw new Exception("服务未初始化");
+                Console.WriteLine("服务未初始化");
             }
         }
 
@@ -222,7 +241,7 @@ namespace FlyVR.Aria2
         {
             try
             {
-                GetMaxConcurrentDownloads();
+                GetMaxConcDownloads();
                 var status = GetTaskStatus();
                 GetGlobalStatus(status);
             }
@@ -237,12 +256,16 @@ namespace FlyVR.Aria2
                 //不会出现并发执行耗时动作。
                 if (timer != null)
                     timer.Start();
+                else
+                    StartTimer();
             }
         }
 
-        private void GetMaxConcurrentDownloads()
+        private void GetMaxConcDownloads()
         {
-            if (!maxConcurrentDowns.HasValue)
+            if (!isCycle)
+                return;
+            if (!maxConcDowns.HasValue || maxConcDowns.Value == 0)
             {
                 int iMaxDownloads = 5;//默认值5
                 Aria2cOption globalOption = GetGlobalOption();
@@ -252,7 +275,7 @@ namespace FlyVR.Aria2
                     if (!string.IsNullOrEmpty(max_downloads))
                         iMaxDownloads = int.Parse(max_downloads);
                 }
-                maxConcurrentDowns = iMaxDownloads;
+                maxConcDowns = iMaxDownloads;
             }
         }
 
@@ -263,30 +286,33 @@ namespace FlyVR.Aria2
         {
             try
             {
-                if (IsPauseAll || CountDownTask() == 0)
+                if (!isCycle || CountDownTask() == 0)
                     return null;
 
                 //复制key
                 List<string> keyList = new List<string>();
-                foreach (var key in downLoadDict.Keys)
-                {
-                    keyList.Add(key);
-                }
+                //foreach (var key in downLoadDict.Keys)
+                //{
+                //    keyList.Add(key);
+                //}
+                keyList.AddRange(downLoadDict.Keys);
 
-                int iDownloadingCount = 0, iTaskCount = 0;
-                //int iMaxCount = maxConcurrentDowns.Value; //不再限定最大轮询数量，可能造成任务状态更新丢失
+                int iDownloadingCount = 0;
+                //int iTaskCount = 0;
+                //int iMaxCount = maxConcDowns.Value; //不再限定最大轮询数量，可能造成任务状态更新丢失
                 //if (iMaxCount <= 5) { iMaxCount *= 5; }
                 //else if (iMaxCount <= 20) { iMaxCount *= 3; }
                 //else if (iMaxCount <= 40) { iMaxCount *= 2; }
                 //else { iMaxCount += 16; }
                 Aria2cGlobalStat status = null;
+                Aria2cTask task = null;
                 //遍历查询状态
                 for (int i = 0; i < keyList.Count; i++)
                 {
-                    iTaskCount++;
+                    //iTaskCount++;
                     try
                     {
-                        Aria2cTask task = TellStatus(keyList[i]);
+                        task = TellStatus(keyList[i]);
                         if (task == null)//当一个任务出问题,则本次循环就放弃掉.例如被杀掉进程后,要是还循环获取状态,是始终拿不到状态的.                            
                             break;
                         /*优化逻辑，注释掉
@@ -299,12 +325,12 @@ namespace FlyVR.Aria2
                         {
                             OnLoading?.Invoke(this, new Aria2cTaskEvent(task));
                             iDownloadingCount++;
-                            if (iDownloadingCount == maxConcurrentDowns.Value)//下载数统计达到最大下载数，后续任务都是waiting，已完成的已遍历过，跳过等待任务
+                            if (iDownloadingCount == maxConcDowns.Value)//下载数统计达到最大下载数，后续任务都是waiting，已完成的已遍历过，跳过等待任务
                             {
                                 status = this.GetGlobalStat();
                                 if (status != null)
                                 {
-                                    i += (int)status.NumWaiting;
+                                    i += (int)status.NumWaiting;//后续任务都是waiting
                                 }
                             }
                         }
@@ -381,11 +407,11 @@ namespace FlyVR.Aria2
         /// <summary>
         /// 全局状态
         /// </summary>
-        private void GetGlobalStatus(Aria2cGlobalStat status)
+        private async void GetGlobalStatus(Aria2cGlobalStat status)
         {
             try
             {
-                if (status == null && !IsPauseAll)
+                if (status == null && isCycle)
                     status = this.GetGlobalStat();
                 if (status == null) return;
 
@@ -396,16 +422,17 @@ namespace FlyVR.Aria2
                     globalStat = status;
                 }
 
-                if (status.NumActive == 0 && status.NumWaiting == 0 && status.DownloadSpeed == 0 && !IsPauseAll)
+                if (status.NumActive == 0L && status.NumWaiting == 0L && status.DownloadSpeed == 0L && isCycle)
                 {
-                    OnAllFinish?.Invoke(this, new Aria2cGlobalStatEvent(status));
+                    await Task.Delay(Convert.ToInt32(this.dInterval * 3));//等待3秒后，再做判断，避免刚添加完任务的瞬间，误判定为全部结束
 
-                    if (timerTMP == null)
+                    status = this.GetGlobalStat();//获取最新status
+                    //timerTMP == null是一个flag，表明OnAllFinish没有触发过
+                    if (status.NumActive == 0L && status.NumWaiting == 0L && status.DownloadSpeed == 0L && !IsLoading && timerTMP == null)
                     {
-                        timerTMP = new Timer(10000);//10s后执行（等待其他如GlobalStatus），改变“暂停”变量，减少计时器轮询操作
-                        timerTMP.Elapsed += new ElapsedEventHandler(SetPauseAll);
-                        timerTMP.AutoReset = false;
-                        timerTMP.Start();
+                        OnAllFinish?.Invoke(this, new Aria2cGlobalStatEvent(status));
+
+                        StartTmpTimer();
                     }
                 }
             }
@@ -415,16 +442,42 @@ namespace FlyVR.Aria2
             }
         }
 
-        private void SetPauseAll(object sender, EventArgs e)
+        private void StartTmpTimer()
         {
-            if (!IsPauseAll && CountDownTask() == 0)
-                IsPauseAll = true;
-
+            if (timerTMP == null)
+            {
+                double dTmpInterval = this.dInterval * 10;
+                timerTMP = new Timer(dTmpInterval);//10s后执行（等待其他如GlobalStatus），改变“循环”标记变量，减少计时器轮询操作
+                timerTMP.Elapsed += new ElapsedEventHandler(SetCycleFlag);
+                timerTMP.AutoReset = false;
+                timerTMP.Start();
+            }
+        }
+        private void StopTmpTimer()
+        {
             if (timerTMP != null)
             {
                 timerTMP.Stop();
                 timerTMP.Dispose();
                 timerTMP = null;
+            }
+        }
+
+        private void SetCycleFlag(object sender, EventArgs e)
+        {
+            if (isCycle || CountDownTask() == 0)
+            {
+                if (globalStat.NumActive == 0 && globalStat.DownloadSpeed == 0)
+                {
+                    isCycle = false;
+                    StopTmpTimer();
+                }
+                else
+                    timerTMP.Start();
+            }
+            else
+            {
+                StopTmpTimer();
             }
         }
         #endregion
@@ -555,6 +608,38 @@ namespace FlyVR.Aria2
             }
             return iRestoreTasksCount;
         }
+
+        /// <summary>
+        /// 刷新下载任务列表
+        /// </summary>
+        /// <returns></returns>
+        public int RefreshDownTaskList()
+        {
+            int iRefreshTasksCount = 0;
+            try
+            {
+                var activelist = this.TellActive();
+                var waitList = this.TellWaiting(0, int.MaxValue);
+                var stopList = this.TellStopped(0, int.MaxValue);
+                activelist.AddRange(waitList);
+                activelist.AddRange(stopList);
+
+                foreach (var task in activelist)
+                {
+                    if (!downLoadDict.ContainsKey(task.Gid))//下载列表不包含该下载任务
+                    {
+                        AddDownTask(task);
+                        iRefreshTasksCount++;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return iRefreshTasksCount;
+            }
+            return iRefreshTasksCount;
+        }
         #endregion
 
         #region Aria2c 接口
@@ -587,17 +672,18 @@ namespace FlyVR.Aria2
         }
 
         /// <summary>
-        /// 下载种子链接文件
+        /// 添加下载任务
         /// </summary>
-        /// <param name="torrent">种子文件</param>
+        /// <param name="uri">下载地址</param>
         /// <param name="fileName">输出文件名</param>
-        /// <param name="dir">下载目录</param>
+        /// <param name="dir">下载文件夹</param>
+        /// <param name="taskOptions">下载任务选项</param>
         /// <returns>成功返回任务标识符，失败返回空</returns>
-        public string AddTorrent(string torrent, string fileName = "", string dir = "")
+        public string AddUri(string uri, string fileName = "", string dir = "", List<Dictionary<string, string>> taskOptions = null)
         {
             try
             {
-                string gid = Aria2cWarpper.AddTorrent(torrent, fileName, dir);
+                string gid = Aria2cWarpper.AddUri(uri, fileName, dir, taskOptions);
                 if (!string.IsNullOrWhiteSpace(gid))
                 {
                     Aria2cTask task = Aria2cWarpper.TellStatus(gid);
@@ -614,21 +700,26 @@ namespace FlyVR.Aria2
         }
 
         /// <summary>
-        /// 下载磁链接文件
+        /// 下载种子链接文件
         /// </summary>
-        /// <param name="metalink">磁链接文件</param>
+        /// <param name="torrent">种子文件</param>
+        /// <param name="fileName">输出文件名</param>
         /// <param name="dir">下载目录</param>
         /// <returns>成功返回任务标识符，失败返回空</returns>
-        public string AddMetalink(string metalink, string fileName = "", string dir = "")
+        public string AddTorrent(string torrent, string fileName = "", string dir = "")
         {
             try
             {
-                string gid = Aria2cWarpper.AddMetalink(metalink, fileName, dir);
+                string autoSaveFileID = "";
+                string gid = Aria2cWarpper.AddTorrent(ref autoSaveFileID, torrent, fileName, dir);
                 if (!string.IsNullOrWhiteSpace(gid))
                 {
                     Aria2cTask task = Aria2cWarpper.TellStatus(gid);
                     OnStart?.Invoke(this, new Aria2cTaskEvent(task));
                     AddDownTask(task);
+
+                    if (autoSaveFileID != "")
+                        gidAndTorrentOrMeta4Map.Add(gid, autoSaveFileID + ".torrent");
                 }
                 return gid;
             }
@@ -636,6 +727,106 @@ namespace FlyVR.Aria2
             {
                 Console.WriteLine(ex);
                 return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 下载种子链接文件
+        /// </summary>
+        /// <param name="torrent">种子文件</param>
+        /// <param name="fileName">输出文件名</param>
+        /// <param name="dir">下载目录</param>
+        /// <param name="taskOptions">下载任务选项</param>
+        /// <returns>成功返回任务标识符，失败返回空</returns>
+        public string AddTorrent(string torrent, string fileName = "", string dir = "", List<Dictionary<string, string>> taskOptions = null)
+        {
+            try
+            {
+                string autoSaveFileID = "";
+                string gid = Aria2cWarpper.AddTorrent(ref autoSaveFileID, torrent, fileName, dir, taskOptions);
+                if (!string.IsNullOrWhiteSpace(gid))
+                {
+                    Aria2cTask task = Aria2cWarpper.TellStatus(gid);
+                    OnStart?.Invoke(this, new Aria2cTaskEvent(task));
+                    AddDownTask(task);
+
+                    if (autoSaveFileID != "")
+                        gidAndTorrentOrMeta4Map.Add(gid, autoSaveFileID + ".torrent");
+                }
+                return gid;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// 下载磁链接文件
+        /// </summary>
+        /// <param name="metalink">磁链接文件</param>
+        /// <param name="dir">下载目录</param>
+        /// <returns>成功返回任务标识符数组，失败返回空数组</returns>
+        public string[] AddMetalink(string metalink, string fileName = "", string dir = "")
+        {
+            try
+            {
+                string autoSaveFileID = "";
+                string[] gids = Aria2cWarpper.AddMetalink(ref autoSaveFileID, metalink, fileName, dir);
+                foreach (var gid in gids)
+                {
+                    if (!string.IsNullOrWhiteSpace(gid))
+                    {
+                        Aria2cTask task = Aria2cWarpper.TellStatus(gid);
+                        OnStart?.Invoke(this, new Aria2cTaskEvent(task));
+                        AddDownTask(task);
+
+                        if (autoSaveFileID != "")
+                            gidAndTorrentOrMeta4Map.Add(gid, autoSaveFileID + ".meta4");
+                    }
+                }
+                return gids;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return new string[] { "" };
+            }
+        }
+
+        /// <summary>
+        /// 下载磁链接文件
+        /// </summary>
+        /// <param name="metalink">磁链接文件</param>
+        /// <param name="fileName">输出文件名</param>
+        /// <param name="dir">下载目录</param>
+        /// <param name="taskOptions">下载任务选项</param>
+        /// <returns>成功返回任务标识符数组，失败返回空数组</returns>
+        public string[] AddMetalink(string metalink, string fileName = "", string dir = "", List<Dictionary<string, string>> taskOptions = null)
+        {
+            try
+            {
+                string autoSaveFileID = "";
+                string[] gids = Aria2cWarpper.AddMetalink(ref autoSaveFileID, metalink, fileName, dir, taskOptions);
+                foreach (var gid in gids)
+                {
+                    if (!string.IsNullOrWhiteSpace(gid))
+                    {
+                        Aria2cTask task = Aria2cWarpper.TellStatus(gid);
+                        OnStart?.Invoke(this, new Aria2cTaskEvent(task));
+                        AddDownTask(task);
+
+                        if (autoSaveFileID != "")
+                            gidAndTorrentOrMeta4Map.Add(gid, autoSaveFileID + ".meta4");
+                    }
+                }
+                return gids;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return new string[] { "" };
             }
         }
 
@@ -692,18 +883,22 @@ namespace FlyVR.Aria2
         /// <summary>
         /// 强制删除所有任务
         /// </summary>
+        /// <param name="lst">移除任务的下载路径集合</param>
         /// <returns>返回删除成功的任务数量</returns>
-        public int ForceRemoveAll()
+        public int ForceRemoveAll(ref List<string> lst)
         {
             int iRemovedCount = 0;
             try
             {
+                if (!IsPauseAll)
+                    ForcePauseAll();
                 //复制key，避免downLoadDict循环时直接删除key导致报错
                 List<string> keyList = new List<string>();
-                foreach (var key in downLoadDict.Keys)
-                {
-                    keyList.Add(key);
-                }
+                //foreach (var key in downLoadDict.Keys)
+                //{
+                //    keyList.Add(key);
+                //}
+                keyList.AddRange(downLoadDict.Keys);
 
                 foreach (var gid in keyList)
                 {
@@ -716,6 +911,20 @@ namespace FlyVR.Aria2
                         bool result = ForceRemove(gid);
                         if (result)
                         {
+                            if (gidAndTorrentOrMeta4Map.ContainsKey(gid))
+                            {
+                                lst.AddRange(new string[] { task.Dir, Path.Combine(task.Dir, gidAndTorrentOrMeta4Map[gid]) });
+                                gidAndTorrentOrMeta4Map.Remove(gid);
+                            }
+
+                            if (!string.IsNullOrWhiteSpace(task.InfoHash))
+                                lst.AddRange(new string[] { task.Dir, Path.Combine(task.Dir, task.InfoHash.ToLower() + ".torrent") });
+
+                            if (task.Bittorrent != null)
+                                lst.AddRange(new string[] { Path.Combine(task.Dir, task.Bittorrent.Info), task.Files[0].Path });
+                            else
+                                lst.AddRange(new string[] { task.Dir, task.Files[0].Path });
+
                             iRemovedCount++;
                         }
                     }
@@ -727,20 +936,34 @@ namespace FlyVR.Aria2
                     }
                 }
 
-
                 //还有一种情况是，启动aria2c之后session自动加载的任务
                 var activelist = this.TellActive();
                 var waitList = this.TellWaiting(-1, int.MaxValue);//最后一个任务往前数N个
-                //var stopList = this.TellStopped(-1, int.MaxValue);//取消剩余，已停止的在aria2c保留
+                //var stopList = this.TellStopped(-1, int.MaxValue);//已停止的下载任务
                 var all_tasks = new List<Aria2cTask>();
                 all_tasks.AddRange(activelist);
                 all_tasks.AddRange(waitList);
+                //all_tasks.AddRange(stopList);
 
                 foreach (var task in all_tasks)
                 {
                     bool result = ForceRemove(task.Gid);
                     if (result)
                     {
+                        if (gidAndTorrentOrMeta4Map.ContainsKey(task.Gid))
+                        {
+                            lst.AddRange(new string[] { task.Dir, Path.Combine(task.Dir, gidAndTorrentOrMeta4Map[task.Gid]) });
+                            gidAndTorrentOrMeta4Map.Remove(task.Gid);
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(task.InfoHash))
+                            lst.AddRange(new string[] { task.Dir, Path.Combine(task.Dir, task.InfoHash.ToLower() + ".torrent") });
+
+                        if (task.Bittorrent != null)
+                            lst.AddRange(new string[] { Path.Combine(task.Dir, task.Bittorrent.Info), task.Files[0].Path });
+                        else
+                            lst.AddRange(new string[] { task.Dir, task.Files[0].Path });
+
                         iRemovedCount++;
                     }
                 }

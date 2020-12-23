@@ -64,13 +64,14 @@ namespace FlyVR.Aria2
                 {
                     this.Mode = ConvertToAria2cBittorrentMode(value as string);
                 }
-                else if (key == "name")
+                else if (key == "info")
                 {
-                    this.Name = ConvertToBittorrentInfoName(value as XmlRpcStruct);
+                    this.Info = ConvertToBittorrentInfoName(value as XmlRpcStruct);
                 }
                 else
                 {
-                    throw new Exception("Aria2cBittorrent不包含该属性");
+                    //throw new Exception("Aria2cBittorrent不包含该属性");
+                    Console.WriteLine("Aria2cBittorrent不包含该属性");
                 }
 
             }
@@ -93,7 +94,9 @@ namespace FlyVR.Aria2
             }
             else
             {
-                throw new Exception("Aria2cBittorrentMode不包含该属性");
+                //throw new Exception("Aria2cBittorrentMode不包含该属性");
+                Console.WriteLine("Aria2cBittorrentMode不包含该属性");
+                return Aria2cBittorrentMode.Single;
             }
         }
 
@@ -137,9 +140,9 @@ namespace FlyVR.Aria2
         public Aria2cBittorrentMode Mode { get; set; }
 
         /// <summary>
-        /// 暂定
+        /// 种子信息
         /// </summary>
-        public string Name { get; set; } 
+        public string Info { get; set; } 
 
 
     }

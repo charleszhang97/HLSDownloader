@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("BrowserHelper")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Charles")]
 [assembly: AssemblyProduct("BrowserHelper")]
 [assembly: AssemblyCopyright("Copyright © Charles 2020")]
 [assembly: AssemblyTrademark("")]
